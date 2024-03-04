@@ -1,19 +1,14 @@
 import os
-from dotenv import load_dotenv
-import os
-from dotenv import load_dotenv, find_dotenv
 import warnings
 import requests
 import json
 import time
-# Initailize global variables
-_ = load_dotenv(find_dotenv())
-# warnings.filterwarnings('ignore')
+
 url = f"{os.getenv('DLAI_TOGETHER_API_BASE', 'https://api.together.xyz')}/inference"
 headers = {
-        "Authorization": f"Bearer {os.getenv('TOGETHER_API_KEY')}",
-        "Content-Type": "application/json"
-    }
+            "Authorization": f"Bearer {os.getenv('TOGETHER_API_KEY')}",
+            "Content-Type": "application/json"
+        }
 
 
 def llama(prompt, 
