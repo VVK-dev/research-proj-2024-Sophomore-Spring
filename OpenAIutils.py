@@ -12,3 +12,13 @@ def num_tokens_from_string(string: str, encoding_name: str = tiktoken.encoding_f
     
     return num_tokens
     
+#Get embedding for a string.
+def get_embedding(input_str: str) -> list[float]:
+
+    response = client.embeddings.create(
+        input = input_str,
+        model="text-embedding-3-small"
+    )
+    
+    return response.data[0].embedding
+    
