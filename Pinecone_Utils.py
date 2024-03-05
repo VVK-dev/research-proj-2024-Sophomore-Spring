@@ -18,3 +18,13 @@ def create_pinecone_index():
             metric = "cosine",
             spec = PodSpec(environment = "gcp-starter")
         )
+
+#Insert a vector into the index
+
+def insert_vector_into_pinecone_index(vector : dict):
+
+    pinecone_client.Index(index_name).upsert(
+        
+        vectors = [vector]
+    )
+
