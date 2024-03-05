@@ -1,8 +1,6 @@
 from OpenAI_utils import get_embedding
 from Pinecone_utils import insert_vector_into_pinecone_index
 
-global filetext
-
 #Split file into chunks and load into filetext
 
 def get_data_from_file(filepath: str) -> list[str]:
@@ -19,13 +17,13 @@ def get_data_from_file(filepath: str) -> list[str]:
 
 #Get and insert vector for each chunk into pinecone index
 
-def insert_vectors_of_data():        
+def insert_vectors_from_data(filetext : list[str]):        
     
     for i in range(0, len(filetext)):
         
         vector_val = get_embedding(filetext[i])
         
-        #use id and vector_val to create entry into vector index in proper format
+        #use index of chunk as id and its vector as vector_val to create entry into vector index in proper format
         
         vector = {"id" : str(i), "values" : vector_val}
         
