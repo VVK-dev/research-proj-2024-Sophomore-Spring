@@ -10,6 +10,8 @@ def get_data_from_file(filepath: str) -> list[str]:
         filetext = file.read().strip().split("\n\n") 
         #assuming text file is written as paragraphs with one line between each para
         
+        #NOTE: Dataset has not been chosen yet, so its format and thus this method is subject to change
+        
         #the filetext variable now contains a list of chunks
         
         return filetext
