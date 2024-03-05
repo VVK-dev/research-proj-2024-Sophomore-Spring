@@ -28,3 +28,20 @@ def insert_vector_into_pinecone_index(vector : dict):
         vectors = [vector]
     )
 
+#Query the index
+
+def query_pinecone_index(input_vector: list[float]) -> list[str]:
+    
+    matches = pinecone_client.Index("RAG-project-vectors").query(
+        
+        vector = input_vector,
+        top_k = 3,
+    )["matches"] #This will return a list of dictionaries containing the IDs and similarity score of the top 3 matches
+    
+    ids = list[str]
+    
+    for match in matches:
+        
+        ids.append(match["id"])
+    
+    return ids
