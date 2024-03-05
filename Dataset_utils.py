@@ -5,14 +5,16 @@ global filetext
 
 #Split file into chunks and load into filetext
 
-def get_data_from_file(filepath: str):
+def get_data_from_file(filepath: str) -> list[str]:
 
     with open( filepath, "r") as file:
         
-        filetext = file.read().strip().split("\n\n") #assuming text file is written as paragraphs with one line 
-        #between each para
+        filetext = file.read().strip().split("\n\n") 
+        #assuming text file is written as paragraphs with one line between each para
         
         #the filetext variable now contains a list of chunks
+        
+        return filetext
 
 
 #Get and insert vector for each chunk into pinecone index
