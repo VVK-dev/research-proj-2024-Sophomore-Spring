@@ -20,7 +20,7 @@ def index_exists() -> bool:
 
 def create_pinecone_index():
 
-    if index_name not in pinecone_client.list_indexes().names():
+    if index_name not in pinecone_client.list_indexes().names(): #2nd check for redundancy
 
         pinecone_client.create_index(
         
@@ -43,16 +43,19 @@ def insert_vector_into_pinecone_index(vector : dict):
 
 def query_pinecone_index(input_vector: list[float]) -> list[str]:
     
-    matches = pinecone_client.Index("RAG-project-vectors").query(
+    matches : list[dict] = pinecone_client.Index("RAG-project-vectors").query(
         
         vector = input_vector,
-        top_k = 3,
-    ).get("matches") #This will return a list of dictionaries containing the IDs and similarity score of the top 3 matches
+        top_k = 3,        
+    ).get("matches") #This will return a list of dictionaries containing the IDs and similarity score of the top 3 
+    #matches
+    
+    #now get list of ids
     
     ids = list[str]
     
     for match in matches:
         
-        ids.append(match["id"])
+        ids.append(match.get("id"))
     
     return ids
