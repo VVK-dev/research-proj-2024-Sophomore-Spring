@@ -5,6 +5,17 @@ pinecone_client = Pinecone(api_key = os.getenv("PINECONE_API_KEY"))
     
 index_name = "RAG-project-vectors"
 
+#Check if starter index already exists
+
+def index_exists() -> bool:
+    
+    if index_name in pinecone_client.list_indexes().names():
+        
+        return True
+    else:
+        
+        return False
+
 #Create starter index
 
 def create_pinecone_index():
