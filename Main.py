@@ -24,3 +24,13 @@ if (not Pinecone_utils.index_exists()):
     
     Dataset_utils.insert_vectors_from_data(filetext = filechunks)
 
+#Step 3: Get prompts
+
+prompt1 : str = "<FIRST PROMPT>"
+prompt2 : str = "<SECOND PROMPT>"
+prompt3 : str = "<THIRD PROMPT>"
+prompt4 : str = "<FOURTH PROMPT>"
+prompt5 : str = "<FIFTH PROMPT>"
+
+prompts_with_context : dict[str,str] = {prompt1 : None, prompt2 : None, prompt3 : None, prompt4 : None, prompt5: None}
+
