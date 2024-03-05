@@ -57,6 +57,8 @@ for prompt in prompts_with_context.keys():
     #Sub-step 4 - update prompt with context
     
     prompts_with_context.update({prompt : context})
+    
+#TODO: Add method here to count tokens and estimate cost before sending prompts
 
 #Step 5: Send prompt to Llama with context
 
@@ -66,3 +68,5 @@ for prompt, context in prompts_with_context.items():
     Prompt: {prompt} \n Context: {context}"
 
     print(Llama2_utils.llama(prompt = prompt_with_context))
+    
+#Possible consideration: use llama_chat() instead and keep track of conversation?
