@@ -23,10 +23,14 @@ def insert_vectors_from_data(filetext : list[str]):
     
     for i in range(0, len(filetext)):
         
+        #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
+        
         vector_val = get_embedding(filetext[i])
         
         #use index of chunk as id and its vector as vector_val to create entry into vector index in proper format
         
         vector = {"id" : str(i), "values" : vector_val}
+        
+        #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
         
         insert_vector_into_pinecone_index(vector)
