@@ -1,4 +1,5 @@
 import os
+import sys
 from dotenv import load_dotenv, find_dotenv
 import Llama2_utils
 import OpenAI_utils
@@ -32,6 +33,12 @@ def CalculateCosts(Filechunks : list[str], isLlama2 : bool = False) -> float:
 
 filechunks : list[str] = Dataset_utils.get_data_from_file(os.getenv("DATA_FILE_PATH"))
 
+#Sub-step 1 - confirm procedure after showing costs for chunk embeddings
+
+if(input(f"Getting embeddings for the file will cost: {CalculateCosts(filechunks)}. Proceed?") is not "Y"):
+    
+    sys.exit(0)
+    
 #Step 2: Check if index exists
 
 if (not Pinecone_utils.index_exists()):
@@ -53,6 +60,13 @@ prompt4 : str = "<FOURTH PROMPT>"
 prompt5 : str = "<FIFTH PROMPT>"
 
 prompts_with_context : dict[str,str] = {prompt1 : None, prompt2 : None, prompt3 : None, prompt4 : None, prompt5: None}
+
+#Sub-step 3 - confirm procedure after showing costs for prompt embeddings
+
+if(input(f"Getting embeddings for the prompts will cost: {CalculateCosts(Filechunks = list(prompts_with_context.keys()))}. Proceed?") 
+   is not "Y"):
+    
+    sys.exit(0)
 
 #Step 4: Get context for prompt 
 
@@ -77,8 +91,6 @@ for prompt in prompts_with_context.keys():
     #Sub-step 4 - update prompt with context
     
     prompts_with_context.update({prompt : context})
-    
-#TODO: Add method here to count tokens and estimate cost before sending prompts
 
 #Step 5: Send prompt to Llama with context
 
@@ -88,6 +100,13 @@ for prompt, context in prompts_with_context.items():
     
     prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
     Prompt: {prompt} \n Context: {context}"
+    
+    #Sub-step 1 - confirm procedure after showing costs
+    
+    #TODO: Clean this up, maybe move it out
+    if(input(f"Prompting Llama 2 will cost: {CalculateCosts((prompts_with_context), True)}. Proceed?") is not "Y"):
+    
+        sys.exit(0)
 
     print(Llama2_utils.llama(prompt = prompt_with_context))
     
