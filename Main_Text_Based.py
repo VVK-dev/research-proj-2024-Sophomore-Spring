@@ -8,6 +8,26 @@ import Dataset_utils
 #Initailize global variables
 _ = load_dotenv(find_dotenv())
 
+#Method to calculate Costs
+def CalculateCosts(Filechunks : list[str], isLlama2 : bool = False) -> float:
+    
+    num_tokens : int = 0
+    
+    for chunk in Filechunks:
+        
+        num_tokens += OpenAI_utils.num_tokens_from_string(string = chunk)
+    
+    if(isLlama2):
+        
+        return (num_tokens * 0.0000002)
+    
+    else:
+        
+        return (num_tokens * 0.00000002)
+
+
+'''RAG System'''
+
 #Step 1: Get chunks from file
 
 filechunks : list[str] = Dataset_utils.get_data_from_file(os.getenv("DATA_FILE_PATH"))
