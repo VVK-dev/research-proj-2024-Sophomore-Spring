@@ -29,3 +29,24 @@ def get_similar_nodes_from_neo4j_vector_index(prompt : str):
         nodes_with_context.update({node, None})
         
         
+ #Get related neighbors of node for context
+def get_context_from_neo4j_graph(nodes : list[documents.Document]):
+        
+    for current_node in nodes:
+    
+        #execute a CYPHER query to return all nodes 1 edge away from the current node for context
+        
+        #TODO: TEST BELOW CYPHER QUERY IN GRAPH IN AURA
+        
+        cypher_query = """MATCH ({current:$Node} {name: $nodeName})--(neighbor)
+        RETURN neighbor""", {"current" : current_node.metadata["label"], "name" : current_node.metadata["name"]}
+        
+        #result : EagerResult = driver.execute_query(cypher_query, database_="neo4j")
+        
+        #result.records
+        
+        #TODO: USE LANGCHAIN NEO4J TO QUERY GRAPH
+        
+        
+        
+       
