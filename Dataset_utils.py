@@ -21,6 +21,8 @@ def get_data_from_file(filepath: str) -> list[str]:
 
 def insert_vectors_from_data(filetext : list[str]):        
     
+    #filetext is the list of all chunks
+    
     for i in range(0, len(filetext)):
         
         #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
