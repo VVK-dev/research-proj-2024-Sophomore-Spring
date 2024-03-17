@@ -15,3 +15,17 @@ driver : Driver = GraphDatabase.driver(URI, auth = (Username, Password))
 def check_connectivity():
     
     driver.verify_connectivity()
+
+def get_similar_nodes_from_neo4j_vector_index(prompt : str):
+    
+    #get the 2 most similar nodes to the given prompt
+    
+    nodes : list[documents.Document] = vector_index.similarity_search(query = prompt, k = 2)
+    
+    nodes_with_context : dict = {}
+    
+    for node in nodes:
+        
+        nodes_with_context.update({node, None})
+        
+        
