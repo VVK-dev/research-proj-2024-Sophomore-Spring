@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv, find_dotenv
 import Llama2_utils
-import OpenAI_utils
 import Neo4j_utils
+from langchain_community.graphs import Neo4jGraph
 
 #Initailize global variables
 _ = load_dotenv(find_dotenv())
