@@ -18,35 +18,39 @@ def check_connectivity():
 
 def get_similar_nodes_from_neo4j_vector_index(prompt : str):
     
-    #get the 2 most similar nodes to the given prompt
+#Search vector index to get top 2 nodes related to prompt and all of their relationships and neighbors 
+def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, prompt : str) -> str:
     
-    nodes : list[documents.Document] = vector_index.similarity_search(query = prompt, k = 2)
+    #execute a cypher query to get 2 most similar nodes to prompt and all of their relationships and neighbors
     
-    nodes_with_context : dict = {}
+    result = knowledge_graph.query("""
+        WITH genai.vector.encode(
+            $prompt, 
+            "OpenAI", 
+            {
+            token: $openAiApiKey,
+            model: $embeddingModel
+            }) AS prompt_embedding
+        CALL db.index.vector.queryNodes(
+            'entity_embeddings', 
+            $top_k, 
+            prompt_embedding
+            ) YIELD node AS contextNode
+        MATCH (contextNode)-[relationship]-(neighbor)
+        RETURN contextNode, relationship, neighbor
+        """, 
+        params= {"openAiApiKey": OpenAIKey,
+                "prompt": "Andreas Boba",
+                "embeddingModel" : "text-embedding-3-small",
+                "top_k": 2}
+    )
+
+    #Form clean string of all context nodes and relationships together
+
+    context_string : str = ""
     
-    for node in nodes:
+    for relation in result:
         
-        nodes_with_context.update({node, None})
-        
-        
- #Get related neighbors of node for context
-def get_context_from_neo4j_graph(nodes : list[documents.Document]):
-        
-    for current_node in nodes:
-    
-        #execute a CYPHER query to return all nodes 1 edge away from the current node for context
-        
-        #TODO: TEST BELOW CYPHER QUERY IN GRAPH IN AURA
-        
-        cypher_query = """MATCH ({current:$Node} {name: $nodeName})--(neighbor)
-        RETURN neighbor""", {"current" : current_node.metadata["label"], "name" : current_node.metadata["name"]}
-        
-        #result : EagerResult = driver.execute_query(cypher_query, database_="neo4j")
-        
-        #result.records
-        
-        #TODO: USE LANGCHAIN NEO4J TO QUERY GRAPH
-        
-        
-        
-       
+        context_string += f"{relation['relationship'][0]['name']} {relation['relationship'][1]} {relation['relationship'][2]['name']}.\n"
+
+    return context_string
