@@ -1,6 +1,5 @@
-import os
-from langchain_community.vectorstores.neo4j_vector import Neo4jVector
 from langchain_community.graphs import Neo4jGraph
+
 #Create vector index if it doesn't already exist
 def create_neo4j_vector_index(knowledge_graph : Neo4jGraph):
     
