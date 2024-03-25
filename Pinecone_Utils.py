@@ -25,7 +25,7 @@ def create_pinecone_index():
         pinecone_client.create_index(
         
             name = index_name,
-            dimension = 768,
+            dimension = 1536,
             metric = "cosine",
             spec = PodSpec(environment = "gcp-starter")
         )
