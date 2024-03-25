@@ -43,3 +43,11 @@ for prompt in prompts_with_context.keys():
     
     prompts_with_context.update( {prompt: context} )
 
+#Step 5: Send prompt with context to Llama
+
+for prompt, context in prompts_with_context.items():
+    
+    prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
+    Prompt: {prompt} \n Context: {context}"
+
+    print(Llama2_utils.llama(prompt = prompt_with_context))
