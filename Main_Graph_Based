@@ -25,3 +25,13 @@ Neo4j_utils.create_neo4j_vector_index(knowledge_graph)
 
 Neo4j_utils.populate_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey)
 
+#Step 3: Get prompts
+
+prompt1 : str = "<FIRST PROMPT>"
+prompt2 : str = "<SECOND PROMPT>"
+prompt3 : str = "<THIRD PROMPT>"
+prompt4 : str = "<FOURTH PROMPT>"
+prompt5 : str = "<FIFTH PROMPT>"
+
+prompts_with_context : dict[str,str] = {prompt1 : None, prompt2 : None, prompt3 : None, prompt4 : None, prompt5: None}
+
