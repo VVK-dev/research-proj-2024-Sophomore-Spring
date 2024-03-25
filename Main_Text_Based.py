@@ -35,7 +35,7 @@ filechunks : list[str] = Dataset_utils.get_data_from_file(os.getenv("DATA_FILE_P
 
 #Sub-step 1 - confirm procedure after showing costs for chunk embeddings
 
-if(input(f"Getting embeddings for the file will cost: {CalculateCosts(filechunks)}. Proceed?") is not "Y"):
+if(input(f"Getting embeddings for the file will cost: {CalculateCosts(filechunks)} if the index does not already exist. Proceed?") is not "Y"):
     
     sys.exit(0)
     
