@@ -18,6 +18,25 @@ def create_neo4j_vector_index(knowledge_graph : Neo4jGraph):
     #All nodes have the 'Entity' label, so this vector index will be for all nodes in the graph
 
 
+#Populate vector index
+def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str):
+    
+    #execute a cypher query to populate the vector index with vectors for all nodes
+    
+    knowledge_graph.query("""
+        MATCH (n) WHERE n.name IS NOT NULL AND n.nameEmbedding IS NULL
+        WITH n, genai.vector.encode(
+            n.name, 
+            "OpenAI", 
+            {
+            token: $openAiApiKey,
+            model: $embeddingModel
+            }) AS vector
+        CALL db.create.setNodeVectorProperty(n, "nameEmbedding", vector)
+        """, 
+        params={"openAiApiKey": OpenAIKey, "embeddingModel": "text-embedding-3-small"} )
+
+
 #Search vector index to get top 2 nodes related to prompt and all of their relationships and neighbors 
 def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, prompt : str) -> str:
     
