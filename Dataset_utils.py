@@ -1,4 +1,4 @@
-from OpenAI_utils import get_embedding
+from OpenAI_utils import get_embedding, num_tokens_from_string
 from Pinecone_utils import insert_vector_into_pinecone_index
 
 #Split file into chunks and load into filetext
@@ -36,3 +36,29 @@ def insert_vectors_from_data(filetext : list[str]):
         #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
         
         insert_vector_into_pinecone_index(vector)
+        
+        
+#Method to calculate Costs
+def CalculateCosts(Filechunks : list[str] = None, Filechunk :str = None, isLlama2 : bool = False) -> float:
+    
+    num_tokens : int = 0
+    
+    if(Filechunks is None):
+        
+        num_tokens += num_tokens_from_string(Filechunk)
+    
+    else:
+        
+        for chunk in Filechunks:
+            
+            num_tokens += num_tokens_from_string(string = chunk)
+    
+    if(isLlama2):
+        
+        return (num_tokens * 0.0000002)
+    
+    else:
+        
+        #If not Llama 2 then text-embedding-3-small
+        
+        return (num_tokens * 0.00000002)

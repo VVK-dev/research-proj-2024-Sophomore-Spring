@@ -9,24 +9,6 @@ import Dataset_utils
 #Initailize global variables
 _ = load_dotenv(find_dotenv())
 
-#Method to calculate Costs
-def CalculateCosts(Filechunks : list[str], isLlama2 : bool = False) -> float:
-    
-    num_tokens : int = 0
-    
-    for chunk in Filechunks:
-        
-        num_tokens += OpenAI_utils.num_tokens_from_string(string = chunk)
-    
-    if(isLlama2):
-        
-        return (num_tokens * 0.0000002)
-    
-    else:
-        
-        return (num_tokens * 0.00000002)
-
-
 '''RAG System'''
 
 #Step 1: Get chunks from file
@@ -35,7 +17,7 @@ filechunks : list[str] = Dataset_utils.get_data_from_file(os.getenv("DATA_FILE_P
 
 #Sub-step 1 - confirm procedure after showing costs for chunk embeddings
 
-if(input(f"Getting embeddings for the file will cost: {CalculateCosts(filechunks)} if the index does not already exist. Proceed?") is not "Y"):
+if(input(f"Getting embeddings for the file will cost: {Dataset_utils.CalculateCosts(filechunks)} if the index does not already exist. Proceed?") is not "Y"):
     
     sys.exit(0)
     
@@ -63,7 +45,7 @@ prompts_with_context : dict[str,str] = {prompt1 : None, prompt2 : None, prompt3 
 
 #Sub-step 3 - confirm procedure after showing costs for prompt embeddings
 
-if(input(f"Getting embeddings for the prompts will cost: {CalculateCosts(Filechunks = list(prompts_with_context.keys()))}. Proceed?") 
+if(input(f"Getting embeddings for the prompts will cost: {Dataset_utils.CalculateCosts(Filechunks = list(prompts_with_context.keys()))}. Proceed?") 
    is not "Y"):
     
     sys.exit(0)
@@ -104,7 +86,7 @@ for prompt, context in prompts_with_context.items():
     #Sub-step 1 - confirm procedure after showing costs
     
     #TODO: Clean this up, maybe move it out
-    if(input(f"Prompting Llama 2 will cost: {CalculateCosts((prompts_with_context), True)}. Proceed?") is not "Y"):
+    if(input(f"Prompting Llama 2 will cost: {Dataset_utils.CalculateCosts(Filechunk = prompt_with_context, isLlama2 = True)}. Proceed?") is not "Y"):
     
         sys.exit(0)
 
