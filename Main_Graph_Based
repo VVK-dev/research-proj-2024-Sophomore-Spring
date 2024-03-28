@@ -3,6 +3,8 @@ from dotenv import load_dotenv, find_dotenv
 import Llama2_utils
 import Neo4j_utils
 from langchain_community.graphs import Neo4jGraph
+from Dataset_utils import CalculateCosts
+import sys
 
 #Initailize global variables
 _ = load_dotenv(find_dotenv())
@@ -49,5 +51,14 @@ for prompt, context in prompts_with_context.items():
     
     prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
     Prompt: {prompt} \n Context: {context}"
+    
+    #Sub-step 1 - confirm procedure after showing costs
+    
+    #TODO: Clean this up, maybe move it out
+    if(input(f"Prompting Llama 2 will cost: {CalculateCosts(Filechunk = prompt_with_context, isLlama2 = True)}. Proceed?") is not "Y"):
+    
+        sys.exit(0)
 
     print(Llama2_utils.llama(prompt = prompt_with_context))
+    
+#Possible consideration: use llama_chat() instead and keep track of conversation?
