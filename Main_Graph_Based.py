@@ -38,3 +38,10 @@ prompt5 : str = "Ask me a question about <SOMETHING> and <SOMETHING>." #Checking
 
 prompts_with_context : dict[str,str] = {prompt1 : None, prompt2 : None, prompt3 : None, prompt4 : None, prompt5: None}
 
+#Step 4: Get context for prompts
+
+for prompt in prompts_with_context.keys():
+    
+    context = Neo4j_utils.search_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey, prompt = prompt)
+    
+    prompts_with_context.update( {prompt: context} )
