@@ -1,5 +1,6 @@
 import os
 from pinecone import Pinecone, PodSpec
+from OpenAI_utils import get_embedding
 
 pinecone_client = Pinecone(api_key = os.getenv("PINECONE_API_KEY"))
     
@@ -38,6 +39,27 @@ def insert_vector_into_pinecone_index(vector : dict):
         
         vectors = [vector]
     )
+
+#Get and insert vector for each chunk into pinecone index
+
+def insert_vectors_from_data(filetext : list[str]):        
+    
+    #filetext is the list of all chunks
+    
+    for i in range(0, len(filetext)):
+        
+        #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
+        
+        vector_val = get_embedding(filetext[i])
+        
+        #use index of chunk as id and its vector as vector_val to create entry into vector index in proper format
+        
+        vector = {"id" : str(i), "values" : vector_val}
+        
+        #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
+        
+        insert_vector_into_pinecone_index(vector)
+
 
 #Query the index
 
