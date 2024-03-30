@@ -41,11 +41,11 @@ if (not Pinecone_utils.index_exists()):
 
 #Step 3: Get prompts
 
-prompt1 : str = "<FIRST PROMPT>"
+prompt1 : str = "Tell me about <SOMETHING>." #Overall descriptive question
 prompt2 : str = "<SECOND PROMPT>"
 prompt3 : str = "<THIRD PROMPT>"
-prompt4 : str = "<FOURTH PROMPT>"
-prompt5 : str = "<FIFTH PROMPT>"
+prompt4 : str = "Ask me a question about <SOMETHING>." #Checking the model's understanding of the text
+prompt5 : str = "Ask me a question about <SOMETHING> and <SOMETHING>." #Checking the model's understanding of multiple texts together
 
 prompts_with_context : dict[str,str] = {prompt1 : None, prompt2 : None, prompt3 : None, prompt4 : None, prompt5: None}
 
