@@ -23,3 +23,30 @@ def get_embedding(input_str: str) -> list[float]:
     
     return response.data[0].embedding
     
+def get_relation_from_articles(prompt, model="gpt-3.5-turbo", temperature=0) -> str:
+    
+    system_message :str = """You are an assistant helping create a knowledge graph in neo4j.
+    Given 2 entities, you will give the possible relationships from the first to the second that would make sense in a knowledge graph.
+    You can only give one relationship per line in your responses.
+    Each relationship must be at least one word and at most 3 words. 
+    You must use underscores in place of spaces in your responses.
+    
+    
+    
+    If no relationships can be made between the 2 entities given, respond only with the word delimited by //.
+    Do not include the delimiter in your response.
+    
+    //NONE//  
+    """
+    
+    messages = [
+    {'role': 'system', 'content': system_message},
+    {'role': 'user', 'content': prompt} 
+    ]
+    
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=temperature 
+    )
+    return response.choices[0].message.content
