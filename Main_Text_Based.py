@@ -5,19 +5,20 @@ import Llama2_utils
 import OpenAI_utils
 import Pinecone_utils
 import Dataset_utils
+import urllib.parse
 
-#Initailize global variables
-_ = load_dotenv(find_dotenv())
+#Initailize environment variables
+_ = load_dotenv(find_dotenv(filename = "Keys.env"))
 
 '''RAG System'''
 
-#Step 1: Get chunks from file
+#Step 1: Get article names from file, each name is one chunk
 
-filechunks : list[str] = Dataset_utils.get_data_from_file(os.getenv("DATA_FILE_PATH"))
+filenames : list[str] = Dataset_utils.get_data_from_file(os.getenv("ARTICLES_FILE_PATH"))
 
 #Sub-step 1 - confirm procedure after showing costs for chunk embeddings
 
-if(input(f"Getting embeddings for the file will cost: {Dataset_utils.CalculateCosts(filechunks)} if the index does not already exist. Proceed?") is not "Y"):
+if(input(f"Getting embeddings for the file names will cost: {Dataset_utils.CalculateCosts(filenames)} if the index does not already exist. Proceed?") is not "Y"):
     
     sys.exit(0)
     
