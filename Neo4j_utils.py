@@ -126,11 +126,11 @@ def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, pro
             $top_k, 
             prompt_embedding
             ) YIELD node AS contextNode
-        MATCH (contextNode)-[relationship]-(neighbor)
+        MATCH (neighbor)-[relationship]-(contextNode)
         RETURN contextNode, relationship, neighbor
         """, 
         params= {"openAiApiKey": OpenAIKey,
-                "prompt": "Andreas Boba",
+                "prompt": prompt,
                 "embeddingModel" : "text-embedding-3-small",
                 "top_k": 2}
     )
