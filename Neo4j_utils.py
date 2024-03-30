@@ -1,4 +1,32 @@
 from langchain_community.graphs import Neo4jGraph
+import urllib.parse
+import csv
+import OpenAI_utils
+
+#Create knowledge graph in neo4j from categories.tsv
+def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph):
+    
+    with open(categories_path, mode="r",encoding="URL") as categories:
+        
+        tsv_reader = csv.reader(categories, delimiter = '\t')
+        
+        for row in tsv_reader:
+            
+            article = urllib.parse.unquote(row).replace("_", " ").split('\t') #decode name and category of each article
+            #remove underscores to make text embeddings better
+            
+            article[1] = article[1].split(".")[-1]
+        
+            knowledge_graph.query("""
+                MERGE (
+                    node:Entity {
+                        name: $name
+                        })
+                ON CREATE SET node:""" + article[1] + "ON MATCH SET node:" + article[1],   
+                params = {"name" : article[0]})
+                
+                #ON CREATE SET and ON MATCH SET can't take variables, so I'm simply concantenating strings here
+
 
 #Create vector index if it doesn't already exist
 def create_neo4j_vector_index(knowledge_graph : Neo4jGraph):
