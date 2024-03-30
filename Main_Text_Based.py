@@ -32,7 +32,12 @@ if (not Pinecone_utils.index_exists()):
     
     #Populate the index once created
     
-    Dataset_utils.insert_vectors_from_data(filetext = filechunks)
+    for name in filenames:
+        
+        #decode name of each article and remove underscores to make text embeddings better
+        name = urllib.parse.unquote(name).replace("_"," ") 
+    
+    Pinecone_utils.insert_vectors_from_data(filetext = filenames)
 
 #Step 3: Get prompts
 
