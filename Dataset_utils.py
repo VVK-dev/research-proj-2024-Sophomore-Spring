@@ -13,6 +13,9 @@ def get_data_from_file(articles_path: str) -> list[str]:
         
         for row in tsv_reader:
             
+            if(row[0] is '#'): #Ignore comments
+                continue
+            
             article_names.append(row)
             
         #the filetext variable now contains a list of chunks
