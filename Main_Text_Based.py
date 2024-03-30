@@ -68,13 +68,16 @@ for prompt in prompts_with_context.keys():
     
     matching_ids : list[str] = Pinecone_utils.query_pinecone_index(vector)
     
-    #Sub-step 3 - join matching chunks together to get context as a single string
+    #Sub-step 3 - get context from wikipedia article
     
     context : str = ""
     
-    for id in matching_ids:
+    for index in matching_ids:
         
-        context += (filechunks[int(id)])
+        article_path = os.getenv("WIKI_ARTICLES_FOLDER_PATH") + "//" + filenames[int(index)] + ".txt"
+        
+        with open(file = article_path, mode = "r") as wiki_article:
+            context += wiki_article.read()
     
     #Sub-step 4 - update prompt with context
     
