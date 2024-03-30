@@ -28,6 +28,50 @@ def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph):
                 #ON CREATE SET and ON MATCH SET can't take variables, so I'm simply concantenating strings here
 
 
+#Create relationships between nodes in the knowledge graph by sending them to ChatGPT            
+def create_neo4j_relationships(links_path : str, knowledge_graph : Neo4jGraph):
+    
+    with open(links_path, mode="r",encoding="URL") as categories:
+        
+        tsv_reader = csv.reader(categories, delimiter = '\t')
+        
+        for row in tsv_reader:
+            
+            links = urllib.parse.unquote(row).split('\t') #decode names of linked articles
+            
+            #TODO: TEST AND FIX THIS
+            
+            prompt : str = f"""Entity 1: {links[0]} 
+            Entity 2: {links[1]}
+            Please tell me all the relationships possible from the first entity to the second entity."""
+            
+            relationships = OpenAI_utils.get_relation_from_articles(prompt = prompt)
+            
+            if("NONE" in relationships):
+                continue
+            else:
+                
+                cypher_query : str = """
+                    MATCH (
+                        nodeA:Entity
+                        {
+                        name: $name1
+                        }),
+                        (
+                        nodeB:Entity 
+                        {
+                        name: $name2
+                        })
+                    MERGE (nodeA)-[r:$relationship]->(nodeB)
+                    """
+                
+                for relation in relationships.splitlines():
+                    
+                    knowledge_graph.query(
+                        cypher_query, 
+                        params = { "name1" : links[0], "name2" : links[1], "relationship" : relation})
+
+
 #Create vector index if it doesn't already exist
 def create_neo4j_vector_index(knowledge_graph : Neo4jGraph):
     
