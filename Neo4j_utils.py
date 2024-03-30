@@ -40,6 +40,9 @@ def create_neo4j_relationships(links_path : str, knowledge_graph : Neo4jGraph):
         
         for row in tsv_reader:
             
+            if(row[0] is '#'): #Ignore comments
+                continue
+            
             links = urllib.parse.unquote(row).split('\t') #decode names of linked articles
             
             #TODO: TEST AND FIX THIS
