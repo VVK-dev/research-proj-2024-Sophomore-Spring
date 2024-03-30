@@ -45,3 +45,23 @@ for prompt in prompts_with_context.keys():
     context = Neo4j_utils.search_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey, prompt = prompt)
     
     prompts_with_context.update( {prompt: context} )
+
+#Step 5: Send prompt with context to Llama
+
+for prompt, context in prompts_with_context.items():
+    
+    prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
+    Prompt: {prompt} \n Context: {context}"
+    
+    #Sub-step 1 - confirm procedure after showing costs
+    
+    #TODO: Clean this up, maybe move it out
+    if(input(f"Prompting Llama 2 will cost: {CalculateCosts(Filechunk = prompt_with_context, isLlama2 = True)}. Proceed?") is not "Y"):
+    
+        sys.exit(0)
+
+    time.sleep(1.0) #wait 1s to avoid being rate limited
+    
+    print(Llama2_utils.llama(prompt = prompt_with_context))
+    
+#Possible consideration: use llama_chat() instead and keep track of conversation?
