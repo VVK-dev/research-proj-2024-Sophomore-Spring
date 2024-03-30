@@ -12,6 +12,9 @@ def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph):
         
         for row in tsv_reader:
             
+            if(row[0] is '#'): #Ignore comments
+                continue
+            
             article = urllib.parse.unquote(row).replace("_", " ").split('\t') #decode name and category of each article
             #remove underscores to make text embeddings better
             
