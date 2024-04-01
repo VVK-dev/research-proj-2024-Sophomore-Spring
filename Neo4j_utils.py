@@ -148,10 +148,15 @@ def create_neo4j_vector_index(knowledge_graph : Neo4jGraph, neo4j_query_counter 
         
 
 #Populate vector index
-def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str):
+def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, neo4j_query_counter : int):
     
     #execute a cypher query to populate the vector index with vectors for all nodes
-    
+
+    if(neo4j_query_counter >= 125):
+        
+        time.sleep(60)
+        neo4j_query_counter = 0
+            
     knowledge_graph.query("""
         MATCH (n) WHERE n.name IS NOT NULL AND n.nameEmbedding IS NULL
         WITH n, genai.vector.encode(
@@ -164,6 +169,8 @@ def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str):
         CALL db.create.setNodeVectorProperty(n, "nameEmbedding", vector)
         """, 
         params={"openAiApiKey": OpenAIKey, "embeddingModel": "text-embedding-3-small"} )
+    
+    neo4j_query_counter += 1
 
 
 #Search vector index to get top 2 nodes related to prompt and all of their relationships and neighbors 
