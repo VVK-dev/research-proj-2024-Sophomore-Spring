@@ -174,10 +174,15 @@ def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, n
 
 
 #Search vector index to get top 2 nodes related to prompt and all of their relationships and neighbors 
-def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, prompt : str) -> str:
+def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, prompt : str, neo4j_query_counter : int) -> str:
     
     #execute a cypher query to get 2 most similar nodes to prompt and all of their relationships and neighbors
     
+    if(neo4j_query_counter >= 125):
+        
+        time.sleep(60)
+        neo4j_query_counter = 0
+        
     result = knowledge_graph.query("""
         WITH genai.vector.encode(
             $prompt, 
@@ -191,7 +196,7 @@ def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, pro
             $top_k, 
             prompt_embedding
             ) YIELD node AS contextNode
-        MATCH (neighbor)-[relationship]-(contextNode)
+        MATCH (contextNode)-[relationship]-(neighbor)
         RETURN contextNode, relationship, neighbor
         """, 
         params= {"openAiApiKey": OpenAIKey,
@@ -199,6 +204,8 @@ def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, pro
                 "embeddingModel" : "text-embedding-3-small",
                 "top_k": 2}
     )
+    
+    neo4j_query_counter += 1
 
     #Form clean string of all context nodes and relationships together
 
