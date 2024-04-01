@@ -124,21 +124,28 @@ def create_neo4j_relationships(links_path : str, knowledge_graph : Neo4jGraph, n
                         
 
 #Create vector index if it doesn't already exist
-def create_neo4j_vector_index(knowledge_graph : Neo4jGraph):
+def create_neo4j_vector_index(knowledge_graph : Neo4jGraph, neo4j_query_counter : int):
     
     #excecute a cypher query to create a vector index suited for OpenAI's text-embedding-3-small
     
+    if(neo4j_query_counter >= 125):
+        
+        time.sleep(60)
+        neo4j_query_counter = 0
+        
     knowledge_graph.query("""
-    CREATE VECTOR INDEX entity_embeddings IF NOT EXISTS
-    FOR (n:Entity) ON (n.nameEmbedding) 
-    OPTIONS { indexConfig: {
-        `vector.dimensions`: 1536,
-        `vector.similarity_function`: 'cosine'
-    }}"""
-    )
+        CREATE VECTOR INDEX entity_embeddings IF NOT EXISTS
+        FOR (n:Entity) ON (n.nameEmbedding) 
+        OPTIONS { indexConfig: {
+            `vector.dimensions`: 1536,
+            `vector.similarity_function`: 'cosine'
+        }}"""
+        )
 
-    #All nodes have the 'Entity' label, so this vector index will be for all nodes in the graph
-
+        #All nodes have the 'Entity' label, so this vector index will be for all nodes in the graph
+    
+    neo4j_query_counter += 1
+        
 
 #Populate vector index
 def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str):
