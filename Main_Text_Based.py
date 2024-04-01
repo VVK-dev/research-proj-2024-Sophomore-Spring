@@ -6,6 +6,7 @@ import OpenAI_utils
 import Pinecone_utils
 import Dataset_utils
 import urllib.parse
+import time
 
 #Initailize environment variables
 _ = load_dotenv(find_dotenv(filename = "Keys.env"))
@@ -14,11 +15,11 @@ _ = load_dotenv(find_dotenv(filename = "Keys.env"))
 
 #Step 1: Get article names from file, each name is one chunk
 
-filenames : list[str] = Dataset_utils.get_data_from_file(os.getenv("ARTICLES_FILE_PATH"))
+filenames : list[str] = Dataset_utils.get_data_from_file(os.getenv("ARTICLES_PATH"))
 
 #Sub-step 1 - confirm procedure after showing costs for chunk embeddings
 
-if(input(f"Getting embeddings for the file names will cost: {Dataset_utils.CalculateCosts(filenames)} if the index does not already exist. Proceed?") is not "Y"):
+if(input(f"Getting embeddings for the file names will cost: {Dataset_utils.CalculateCosts(filenames)} if the index does not already exist. Proceed?") != "Y"):
     
     sys.exit(0)
     
@@ -49,13 +50,6 @@ prompt5 : str = "Ask me a question about <SOMETHING> and <SOMETHING>." #Checking
 
 prompts_with_context : dict[str,str] = {prompt1 : None, prompt2 : None, prompt3 : None, prompt4 : None, prompt5: None}
 
-#Sub-step 3 - confirm procedure after showing costs for prompt embeddings
-
-if(input(f"Getting embeddings for the prompts will cost: {Dataset_utils.CalculateCosts(Filechunks = list(prompts_with_context.keys()))}. Proceed?") 
-   is not "Y"):
-    
-    sys.exit(0)
-
 #Step 4: Get context for prompt 
 
 for prompt in prompts_with_context.keys():
@@ -85,20 +79,20 @@ for prompt in prompts_with_context.keys():
 
 #Step 5: Send prompt to Llama with context
 
-#TODO: Add a short time gap between each request to reduce chances of hitting rate limit
+responses_file = open(file = os.getenv("TEXT_RESPONSES"), mode = 'a', encoding = 'UTF-8')
 
 for prompt, context in prompts_with_context.items():
     
     prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
     Prompt: {prompt} \n Context: {context}"
-    
-    #Sub-step 1 - confirm procedure after showing costs
-    
-    #TODO: Clean this up, maybe move it out
-    if(input(f"Prompting Llama 2 will cost: {Dataset_utils.CalculateCosts(Filechunk = prompt_with_context, isLlama2 = True)}. Proceed?") is not "Y"):
-    
-        sys.exit(0)
 
-    print(Llama2_utils.llama(prompt = prompt_with_context))
+    time.sleep(1.0) #wait 1s to avoid being rate limited by together.ai
     
-#Possible consideration: use llama_chat() instead and keep track of conversation?
+    result : str = Llama2_utils.llama(prompt = prompt_with_context)
+    
+    #Possible consideration: use llama_chat() instead and keep track of conversation?
+    
+    responses_file.write(f"PROMPT: \n{prompt_with_context}\n RESPONSE: \n{result}\n")
+    responses_file.write("---------------------------------------------------------")
+    
+responses_file.close()
