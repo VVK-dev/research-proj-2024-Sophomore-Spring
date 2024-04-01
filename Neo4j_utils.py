@@ -2,33 +2,49 @@ from langchain_community.graphs import Neo4jGraph
 import urllib.parse
 import csv
 import OpenAI_utils
+import time
 
 #Create knowledge graph in neo4j from categories.tsv
-def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph):
+def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph, neo4j_query_counter : int):
     
-    with open(categories_path, mode="r",encoding="URL") as categories:
+    with open(categories_path, mode="r") as categories:
         
         tsv_reader = csv.reader(categories, delimiter = '\t')
         
         for row in tsv_reader:
             
-            if(row[0] is '#'): #Ignore comments
+            if((len(row) == 0) or (row[0].startswith('#'))): #Ignore empty lines and comments 
                 continue
             
-            article = urllib.parse.unquote(row).replace("_", " ").split('\t') #decode name and category of each article
+            #decode name and category of each article
+            
+            article :list[str] = [urllib.parse.unquote(row[0]).replace("_", " "), urllib.parse.unquote(row[1])] 
             #remove underscores to make text embeddings better
             
-            article[1] = article[1].split(".")[-1]
+            article[1] = article[1].split(".")[-1] #get most specific category to set as label for node
         
-            knowledge_graph.query("""
-                MERGE (
-                    node:Entity {
-                        name: $name
-                        })
-                ON CREATE SET node:""" + article[1] + "ON MATCH SET node:" + article[1],   
-                params = {"name" : article[0]})
+            #query to create the node in the graph only if not hitting rate limit
+        
+            if(neo4j_query_counter >= 125):
                 
-                #ON CREATE SET and ON MATCH SET can't take variables, so I'm simply concantenating strings here
+                #if hitting rate limit, wait 1 minute for rate limit to refresh
+                
+                time.sleep(60)
+                neo4j_query_counter = 0
+                 
+            #In categories.tsv, multiple categories are given to the same article, but each one is in a different 
+            #line. So, if we encounter the same article name, we should add the additional category as a label 
+            #to the existing node, rather than creating a new one
+            
+            knowledge_graph.query("""
+            MERGE (
+                node:Entity {
+                    name: $name
+                    })
+            ON CREATE SET node:""" + article[1] + "\nON MATCH SET node:" + article[1],   
+            params = {"name" : article[0]})
+            
+            #ON CREATE SET and ON MATCH SET can't take variables, so I'm simply concantenating strings here
 
 
 #Create relationships between nodes in the knowledge graph by sending them to ChatGPT            
