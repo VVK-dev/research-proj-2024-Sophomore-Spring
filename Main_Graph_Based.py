@@ -50,6 +50,9 @@ for prompt in prompts_with_context.keys():
 
 #Step 5: Send prompt with context to Llama
 
+#NOTE: Change below env variable when using gpt 4
+responses_file = open(file = os.getenv("GPT_3.5_RESPONSES"), mode = 'a', encoding = 'UTF-8')
+
 for prompt, context in prompts_with_context.items():
     
     prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
@@ -57,13 +60,12 @@ for prompt, context in prompts_with_context.items():
 
     time.sleep(1.0) #wait 1s to avoid being rate limited by together.ai
     
-    #TODO: Clean this up, maybe move it out
-    if(input(f"Prompting Llama 2 will cost: {CalculateCosts(Filechunk = prompt_with_context, isLlama2 = True)}. Proceed?") is not "Y"):
+    result : str = Llama2_utils.llama(prompt = prompt_with_context)
     
-        sys.exit(0)
+    #Possible consideration: use llama_chat() instead and keep track of conversation?
+    
+    responses_file.write(f"PROMPT: \n{prompt_with_context}\n RESPONSE: \n{result}\n")
+    responses_file.write("---------------------------------------------------------")
+    
 
-    time.sleep(1.0) #wait 1s to avoid being rate limited
-    
-    print(Llama2_utils.llama(prompt = prompt_with_context))
-    
-#Possible consideration: use llama_chat() instead and keep track of conversation?
+responses_file.close()
