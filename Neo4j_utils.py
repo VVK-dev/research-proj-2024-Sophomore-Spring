@@ -48,51 +48,80 @@ def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph, neo4
 
 
 #Create relationships between nodes in the knowledge graph by sending them to ChatGPT            
-def create_neo4j_relationships(links_path : str, knowledge_graph : Neo4jGraph):
+def create_neo4j_relationships(links_path : str, knowledge_graph : Neo4jGraph, neo4j_query_counter : int):
     
-    with open(links_path, mode="r",encoding="URL") as categories:
+    chatgpt_prompt_counter : int = 0
+    
+    with open(links_path, mode="r") as categories:
         
         tsv_reader = csv.reader(categories, delimiter = '\t')
         
         for row in tsv_reader:
             
-            if(row[0] is '#'): #Ignore comments
+            if((len(row) == 0) or (row[0].startswith('#'))): #Ignore empty lines and comments 
                 continue
             
-            links = urllib.parse.unquote(row).split('\t') #decode names of linked articles
+            #decode names of linked articles
+
+            link : list[str] = [urllib.parse.unquote(row[0]).replace("_", " "), urllib.parse.unquote(row[1]).replace("_", " ")]            
+
+            #get relationships between nodes by prompting chatgpt
             
-            #TODO: TEST AND FIX THIS
-            
-            prompt : str = f"""Entity 1: {links[0]} 
-            Entity 2: {links[1]}
+            prompt : str = f"""
+            Entity 1: {link[0]} 
+            Entity 2: {link[1]}
             Please tell me all the relationships possible from the first entity to the second entity."""
             
-            relationships = OpenAI_utils.get_relation_from_articles(prompt = prompt)
+            relationships :str
             
+            if(chatgpt_prompt_counter >= 500):
+                
+                #if rate limit hit, wait 1 minute to refresh it 
+                
+                time.sleep(60)
+                chatgpt_prompt_counter = 0
+
+            relationships = OpenAI_utils.get_relation_from_articles(prompt = prompt)
+                    
+            chatgpt_prompt_counter +=1
+                            
             if("NONE" in relationships):
-                continue
+                
+                continue #If there are no possible relationships, move to next line in links.tsv
+            
             else:
                 
-                cypher_query : str = """
-                    MATCH (
-                        nodeA:Entity
-                        {
-                        name: $name1
-                        }),
-                        (
-                        nodeB:Entity 
-                        {
-                        name: $name2
-                        })
-                    MERGE (nodeA)-[r:$relationship]->(nodeB)
-                    """
+                if(neo4j_query_counter >= 125):
+                
+                    #if hitting rate limit, wait 1 minute for rate limit to refresh
+                    
+                    time.sleep(60)
+                    neo4j_query_counter = 0
+                
+                #if there are possible relationships, create them between the 2 nodes
+                
+                cypher_base_query : str = """
+                    MATCH (nodeA:Entity {name: $name1})
+                    MATCH (nodeB:Entity {name: $name2})
+                    WHERE nodeA IS NOT NULL AND nodeB IS NOT NULL
+                    """ #individal match clauses to prevent formation of a cartesian product
                 
                 for relation in relationships.splitlines():
                     
+                    relation = relation.strip().replace(' ','_').replace("'","").replace(".","_").replace("-","_").replace('__','_')
+                    #in case chatgpt still used any special characters by mistake
+                    
+                    if(len(relation) == 0):
+                        continue #there is a weird case where chatgpt literally gives "    " as a relation
+                    
+                    cypher_query = cypher_base_query + f"\nMERGE (nodeA)-[r:{relation}]->(nodeB)"
+                    
                     knowledge_graph.query(
                         cypher_query, 
-                        params = { "name1" : links[0], "name2" : links[1], "relationship" : relation})
-
+                        params = { "name1" : link[0], "name2" : link[1] })
+                    
+                    neo4j_query_counter += 1
+                        
 
 #Create vector index if it doesn't already exist
 def create_neo4j_vector_index(knowledge_graph : Neo4jGraph):
