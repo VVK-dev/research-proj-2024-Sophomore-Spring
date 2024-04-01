@@ -20,6 +20,8 @@ OpenAIKey = os.getenv("OPENAI_API_KEY")
 
 knowledge_graph = Neo4jGraph(url = Neo4j_URI, username = Username, password = Password, database = "neo4j")
 
+neo4j_query_counter : int = 0
+
 #Step 1: Create vector index if it doesn't already exist
 
 Neo4j_utils.create_neo4j_vector_index(knowledge_graph)
@@ -52,8 +54,8 @@ for prompt, context in prompts_with_context.items():
     
     prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
     Prompt: {prompt} \n Context: {context}"
-    
-    #Sub-step 1 - confirm procedure after showing costs
+
+    time.sleep(1.0) #wait 1s to avoid being rate limited by together.ai
     
     #TODO: Clean this up, maybe move it out
     if(input(f"Prompting Llama 2 will cost: {CalculateCosts(Filechunk = prompt_with_context, isLlama2 = True)}. Proceed?") is not "Y"):
