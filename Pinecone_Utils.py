@@ -4,7 +4,7 @@ from OpenAI_utils import get_embedding
 
 pinecone_client = Pinecone(api_key = os.getenv("PINECONE_API_KEY"))
     
-index_name = "RAG-project-vectors"
+index_name = "rag-project-vectors"
 
 #Check if starter index already exists
 
