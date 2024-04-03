@@ -124,14 +124,9 @@ def create_neo4j_relationships(links_path : str, knowledge_graph : Neo4jGraph, n
                         
 
 #Create vector index if it doesn't already exist
-def create_neo4j_vector_index(knowledge_graph : Neo4jGraph, neo4j_query_counter : int):
+def create_neo4j_vector_index(knowledge_graph : Neo4jGraph):
     
     #excecute a cypher query to create a vector index suited for OpenAI's text-embedding-3-small
-    
-    if(neo4j_query_counter >= 125):
-        
-        time.sleep(60)
-        neo4j_query_counter = 0
         
     knowledge_graph.query("""
         CREATE VECTOR INDEX entity_embeddings IF NOT EXISTS
@@ -143,22 +138,15 @@ def create_neo4j_vector_index(knowledge_graph : Neo4jGraph, neo4j_query_counter 
         )
 
         #All nodes have the 'Entity' label, so this vector index will be for all nodes in the graph
-    
-    neo4j_query_counter += 1
         
 
 #Populate vector index
-def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, neo4j_query_counter : int):
+def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str):
     
     #execute a cypher query to populate the vector index with vectors for all nodes
-
-    if(neo4j_query_counter >= 125):
-        
-        time.sleep(60)
-        neo4j_query_counter = 0
             
     knowledge_graph.query("""
-        MATCH (n) WHERE n.name IS NOT NULL AND n.nameEmbedding IS NULL
+        MATCH (n) WHERE n.name IS NOT NULL
         WITH n, genai.vector.encode(
             n.name, 
             "OpenAI", 
@@ -169,19 +157,12 @@ def populate_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, n
         CALL db.create.setNodeVectorProperty(n, "nameEmbedding", vector)
         """, 
         params={"openAiApiKey": OpenAIKey, "embeddingModel": "text-embedding-3-small"} )
-    
-    neo4j_query_counter += 1
 
 
 #Search vector index to get top 2 nodes related to prompt and all of their relationships and neighbors 
-def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, prompt : str, neo4j_query_counter : int) -> str:
+def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, prompt : str) -> str:
     
     #execute a cypher query to get 2 most similar nodes to prompt and all of their relationships and neighbors
-    
-    if(neo4j_query_counter >= 125):
-        
-        time.sleep(60)
-        neo4j_query_counter = 0
         
     result = knowledge_graph.query("""
         WITH genai.vector.encode(
@@ -202,10 +183,8 @@ def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, pro
         params= {"openAiApiKey": OpenAIKey,
                 "prompt": prompt,
                 "embeddingModel" : "text-embedding-3-small",
-                "top_k": 2}
+                "top_k": 1}
     )
-    
-    neo4j_query_counter += 1
 
     #Form clean string of all context nodes and relationships together
 
