@@ -1,6 +1,12 @@
 import os
 from pinecone import Pinecone, PodSpec
 from OpenAI_utils import get_embedding
+from dotenv import load_dotenv, find_dotenv
+import time
+
+#Initailize environment variables
+_ = load_dotenv(find_dotenv(filename = "Keys.env"))
+
 
 pinecone_client = Pinecone(api_key = os.getenv("PINECONE_API_KEY"))
     
@@ -75,16 +81,16 @@ def insert_vectors_from_data(filetext : list[str]):
 
 def query_pinecone_index(input_vector: list[float]) -> list[str]:
     
-    matches : list[dict] = pinecone_client.Index("RAG-project-vectors").query(
+    matches : list[dict] = pinecone_client.Index(index_name).query(
         
         vector = input_vector,
-        top_k = 3,        
+        top_k = 1,        
     ).get("matches") #This will return a list of dictionaries containing the IDs and similarity score of the top 3 
     #matches
     
     #now get list of ids
     
-    ids = list[str]
+    ids : list[str] = []
     
     for match in matches:
         
