@@ -17,12 +17,6 @@ _ = load_dotenv(find_dotenv(filename = "Keys.env"))
 
 filenames : list[str] = Dataset_utils.get_data_from_file(os.getenv("ARTICLES_PATH"))
 
-#Sub-step 1 - confirm procedure after showing costs for chunk embeddings
-
-if(input(f"Getting embeddings for the file names will cost: {Dataset_utils.CalculateCosts(filenames)} if the index does not already exist. Proceed?") != "Y"):
-    
-    sys.exit(0)
-    
 #Step 2: Check if index exists
 
 if (not Pinecone_utils.index_exists()):
@@ -93,23 +87,27 @@ for prompt in prompts_with_context.keys():
     
     for index in matching_ids:
         
-        article_path = os.getenv("WIKI_ARTICLES_FOLDER_PATH") + "//" + filenames[int(index)] + ".txt"
+        article_path = os.getenv("WIKI_ARTICLES_FOLDER_PATH") + "\\" + filenames[int(index)] + ".txt"
         
-        with open(file = article_path, mode = "r") as wiki_article:
+        with open(file = article_path, mode = "r", encoding='UTF-8') as wiki_article:
             context += wiki_article.read()
     
-    #Sub-step 4 - update prompt with context
+    
+    #Sub-step 4 - reduce size of context if it's too big
+    
+    context = Dataset_utils.token_chopper(context = context)
+    
+    #Sub-step 5 - update prompt with context
     
     prompts_with_context.update({prompt : context})
 
-#Step 5: Send prompt to Llama with context
+#Step 5: Send prompt with context to Llama
 
-responses_file = open(file = os.getenv("TEXT_RESPONSES"), mode = 'a', encoding = 'UTF-8')
+responses_file = open(file = os.getenv("LLAMA_RESPONSES_TEXT_PATH"), mode = 'a', encoding = 'UTF-8')
 
 for prompt, context in prompts_with_context.items():
     
-    prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
-    Prompt: {prompt} \n Context: {context}"
+    prompt_with_context : str = f"""Respond to the following prompt using the context given below it.\nPrompt: {prompt} \nContext: {context}"""
 
     time.sleep(1.0) #wait 1s to avoid being rate limited by together.ai
     
@@ -118,6 +116,7 @@ for prompt, context in prompts_with_context.items():
     #Possible consideration: use llama_chat() instead and keep track of conversation?
     
     responses_file.write(f"PROMPT: \n{prompt_with_context}\n RESPONSE: \n{result}\n")
-    responses_file.write("---------------------------------------------------------")
+    responses_file.write("---------------------------------------------------------\n")
     
+
 responses_file.close()

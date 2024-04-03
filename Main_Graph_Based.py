@@ -3,8 +3,7 @@ from dotenv import load_dotenv, find_dotenv
 import Llama2_utils
 import Neo4j_utils
 from langchain_community.graphs import Neo4jGraph
-from Dataset_utils import CalculateCosts
-import sys
+from Dataset_utils import token_chopper
 import time
 
 #Initailize global variables
@@ -19,8 +18,6 @@ OpenAIKey = os.getenv("OPENAI_API_KEY")
 #Load Graph
 
 knowledge_graph = Neo4jGraph(url = Neo4j_URI, username = Username, password = Password, database = "neo4j")
-
-neo4j_query_counter : int = 0
 
 #Step 1: Create vector index if it doesn't already exist
 
@@ -71,17 +68,21 @@ for prompt in prompts_with_context.keys():
     
     context = Neo4j_utils.search_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey, prompt = prompt)
     
+    #Sub-step 1 - reduce size of context if it's too big
+    
+    context = token_chopper(context = context)
+    
+    #Sub-step 2 - update prompts_with_context dictionary
+    
     prompts_with_context.update( {prompt: context} )
 
 #Step 5: Send prompt with context to Llama
 
-#NOTE: Change below env variable when using gpt 4
-responses_file = open(file = os.getenv("GPT_3.5_RESPONSES"), mode = 'a', encoding = 'UTF-8')
+responses_file = open(file = os.getenv("LLAMA_RESPONSES_GPT_3-5_RELATIONSHIPS_PATH"), mode = 'a', encoding = 'UTF-8')
 
 for prompt, context in prompts_with_context.items():
     
-    prompt_with_context : str = f"Respond to the following prompt using the context given below it.\n 
-    Prompt: {prompt} \n Context: {context}"
+    prompt_with_context : str = f"""Respond to the following prompt using the context given below it.\nPrompt: {prompt} \nContext: {context}"""
 
     time.sleep(1.0) #wait 1s to avoid being rate limited by together.ai
     
@@ -90,7 +91,7 @@ for prompt, context in prompts_with_context.items():
     #Possible consideration: use llama_chat() instead and keep track of conversation?
     
     responses_file.write(f"PROMPT: \n{prompt_with_context}\n RESPONSE: \n{result}\n")
-    responses_file.write("---------------------------------------------------------")
+    responses_file.write("---------------------------------------------------------\n")
     
 
 responses_file.close()
