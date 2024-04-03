@@ -8,15 +8,14 @@ _ = load_dotenv(find_dotenv(filename = "Keys.env"))
 
 client = openai.OpenAI(api_key = os.getenv('OPENAI_API_KEY')) #set client
 
-'''
 #Get the number of tokens in a text string.
-def num_tokens_from_string(string: str, encoding_name: str = tiktoken.encoding_for_model("text-embedding-3-small")) -> int:
+def num_tokens_from_string(string: str) -> int:
     
-    encoding = tiktoken.get_encoding(encoding_name)
-    num_tokens = len(encoding.encode(string))
+    tokens = tiktoken.encoding_for_model("gpt-3.5-turbo").encode(string)
+    num_tokens = len(tokens)
     
     return num_tokens
-'''
+
 #Get embedding for a string.
 def get_embedding(input_str: str) -> list[float]:
 
@@ -36,7 +35,7 @@ def get_relation_from_articles(prompt, model="gpt-3.5-turbo-0125", temperature=0
     You can give upto 3 relationsips.
     You can only give one relationship per line in your responses.
     Each relationship must be at least one word and at most 5 words. 
-    Do not repeat relationships that are semantically similar.
+    Do not repeat relationships that are the same or similar.
     You must use underscores in place of spaces in your responses.
     Do not use any special characters other than underscores in your responses.
     
