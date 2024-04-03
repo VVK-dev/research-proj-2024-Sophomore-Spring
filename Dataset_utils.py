@@ -21,30 +21,20 @@ def get_data_from_file(articles_path: str) -> list[str]:
         #the filetext variable now contains a list of chunks
         
         return article_names
+    
+    
+def token_chopper(context : str):
+    
+    while(num_tokens_from_string(context) >= 2300):
         
+        # Split the paragraph into lines
         
-#Method to calculate Costs
+        lines = context.splitlines()
 
-def CalculateCosts(Filechunks : list[str] = None, Filechunk :str = None, isLlama2 : bool = False) -> float:
-    
-    num_tokens : int = 0
-    
-    if(Filechunks is None):
+        # Remove the last line
+        lines_without_last = lines[:-1]
+
+        # Join the lines back together
+        context = '\n'.join(lines_without_last)
         
-        num_tokens += num_tokens_from_string(Filechunk)
-    
-    else:
-        
-        for chunk in Filechunks:
-            
-            num_tokens += num_tokens_from_string(string = chunk)
-    
-    if(isLlama2):
-        
-        return (num_tokens * 0.0000002)
-    
-    else:
-        
-        #If not Llama 2 then text-embedding-3-small
-        
-        return (num_tokens * 0.00000002)
+    return context
