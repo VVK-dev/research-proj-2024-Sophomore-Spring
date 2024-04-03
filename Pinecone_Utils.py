@@ -40,13 +40,24 @@ def create_pinecone_index():
 
 def insert_vectors_from_data(filetext : list[str]):        
     
+    openai_embedding_prompt_counter : int = 0
+    
+    index = pinecone_client.Index(index_name)
+    
     #filetext is the list of all chunks
     
     for i in range(0, len(filetext)):
         
-        #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
+        if(openai_embedding_prompt_counter >= 3000):
+            
+            #if rate limit hit, wait 1 minute to refresh it 
+            
+            time.sleep(60)
+            openai_embedding_prompt_counter = 0
         
         vector_val = get_embedding(filetext[i])
+        
+        openai_embedding_prompt_counter += 1
         
         #use index of chunk as id and its vector as vector_val to create entry into vector index in proper format
         
@@ -54,7 +65,10 @@ def insert_vectors_from_data(filetext : list[str]):
         
         #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
         
-        insert_vector_into_pinecone_index(vector)
+        index.upsert(
+        
+            vectors = [vector]
+        )
 
 
 #Query the index
