@@ -3,6 +3,11 @@ import warnings
 import requests
 import json
 import time
+from dotenv import load_dotenv, find_dotenv
+
+
+#Initailize environment variables
+_ = load_dotenv(find_dotenv(filename = "Keys.env"))
 
 url = f"{os.getenv('DLAI_TOGETHER_API_BASE', 'https://api.together.xyz')}/inference"
 headers = {
