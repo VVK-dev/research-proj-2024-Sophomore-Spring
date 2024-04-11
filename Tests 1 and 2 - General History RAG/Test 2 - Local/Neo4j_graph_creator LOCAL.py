@@ -18,8 +18,6 @@ knowledge_graph = Neo4jGraph(url = Neo4j_URI, username = Username, password = Pa
 
 #Populate graph
 
-neo4j_query_counter : int = 0
+Neo4j_utils_LOCAL.create_neo4j_nodes(categories_path = os.getenv("CATEGORIES_PATH"), knowledge_graph = knowledge_graph)
 
-Neo4j_utils_LOCAL.create_neo4j_nodes(categories_path = os.getenv("CATEGORIES_PATH"), knowledge_graph = knowledge_graph, neo4j_query_counter = neo4j_query_counter)
-
-Neo4j_utils_LOCAL.create_neo4j_relationships(links_path = os.getenv("LINKS_PATH"), knowledge_graph = knowledge_graph, neo4j_query_counter = neo4j_query_counter)
+Neo4j_utils_LOCAL.create_neo4j_relationships(links_path = os.getenv("LINKS_PATH"), knowledge_graph = knowledge_graph)

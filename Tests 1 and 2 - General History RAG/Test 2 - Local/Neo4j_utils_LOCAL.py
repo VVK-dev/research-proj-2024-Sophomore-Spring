@@ -5,7 +5,7 @@ import OpenAI_utils
 import time
 
 #Create knowledge graph in neo4j from categories.tsv
-def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph, neo4j_query_counter : int):
+def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph):
     
     with open(categories_path, mode="r") as categories:
         
@@ -39,7 +39,7 @@ def create_neo4j_nodes(categories_path : str, knowledge_graph : Neo4jGraph, neo4
 
 
 #Create relationships between nodes in the knowledge graph by sending them to ChatGPT            
-def create_neo4j_relationships(links_path : str, knowledge_graph : Neo4jGraph, neo4j_query_counter : int):
+def create_neo4j_relationships(links_path : str, knowledge_graph : Neo4jGraph):
     
     chatgpt_prompt_counter : int = 0
     
