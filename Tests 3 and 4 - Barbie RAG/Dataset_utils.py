@@ -7,14 +7,6 @@ def get_paragraphs_from_file(article_path: str) -> list[str]:
         
         return file.read().split("\n\n")
 
-    
-#get wiki article as individual lines
-def get_lines_from_file(article_path: str) -> list[str]:
-
-    with open(article_path, "r") as file:
-        
-        return file.readlines() #TODO: REMOVE EMPTY LINES
-
 
 def token_chopper(context : str):
     
