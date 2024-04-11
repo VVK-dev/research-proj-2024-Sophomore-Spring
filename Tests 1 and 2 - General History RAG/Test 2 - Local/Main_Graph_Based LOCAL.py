@@ -78,7 +78,7 @@ for prompt in prompts_with_context.keys():
 
 #Step 5: Send prompt with context to Llama
 
-responses_file = open(file = os.getenv("LLAMA_RESPONSES_GPT_3-5_RELATIONSHIPS_PATH"), mode = 'a', encoding = 'UTF-8')
+responses_file = open(file = os.getenv("TEST_2_GRAPH_RESPONSES"), mode = 'a', encoding = 'UTF-8')
 
 for prompt, context in prompts_with_context.items():
     

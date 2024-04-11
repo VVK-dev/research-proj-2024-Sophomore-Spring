@@ -1,31 +1,38 @@
 import os
+import sys
 from dotenv import load_dotenv, find_dotenv
 import Llama2_utils
-import Neo4j_utils_LOCAL
-from langchain_community.graphs import Neo4jGraph
-from Dataset_utils import token_chopper
+import OpenAI_utils
+import Pinecone_utils
+import Dataset_utils
+import urllib.parse
 import time
 
 #Initailize environment variables
 _ = load_dotenv(find_dotenv(filename = "Keys.env"))
 
-#Load Keys
+'''RAG System'''
 
-Neo4j_URI = os.getenv("NEO4J_URI_LOCAL")
-Username, Password = os.getenv("NEO4J_USERNAME_LOCAL"), os.getenv("NEO4J_PASSWORD_LOCAL")
-OpenAIKey = os.getenv("OPENAI_API_KEY")
+#Step 1: Get article names from file, each name is one chunk
 
-#Load Graph
+paragraph_chunks : list[str] = Dataset_utils.get_paragraphs_from_file(os.getenv("BARBIE_ARTICLE_TEXT_PATH"))
 
-knowledge_graph = Neo4jGraph(url = Neo4j_URI, username = Username, password = Password, database = "neo4j")
+#Step 2: Check if index exists
 
-#Step 1: Create vector index if it doesn't already exist
-
-Neo4j_utils_LOCAL.create_neo4j_vector_index(knowledge_graph)
-
-#Step 2: Populate vector index if empty
-
-Neo4j_utils_LOCAL.populate_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey)
+if (not Pinecone_utils.index_exists()):
+    
+    #If the index doesn't exist, create it
+    
+    Pinecone_utils.create_pinecone_index()
+    
+    #Populate the index once created
+    
+    for name in paragraph_chunks:
+        
+        #decode name of each article and remove underscores to make text embeddings better
+        name = urllib.parse.unquote(name).replace("_"," ") 
+    
+    Pinecone_utils.insert_vectors_from_data(filetext = paragraph_chunks)
 
 #Step 3: Get prompts
 
@@ -62,23 +69,37 @@ prompts_with_context : dict[str,str] = {
     relation_prompt7 : None, relation_prompt8 : None, relation_prompt9 : None, relation_prompt10 : None    
     }
 
-#Step 4: Get context for prompts
+#Step 4: Get context for prompt 
 
 for prompt in prompts_with_context.keys():
     
-    context = Neo4j_utils_LOCAL.search_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey, prompt = prompt)
+    #Sub-step 1 - get vector embedding of prompt 
     
-    #Sub-step 1 - reduce size of context if it's too big
+    vector : list[float] = OpenAI_utils.get_embedding(prompt)
     
-    context = token_chopper(context = context)
+    #Sub-step 2 - query over index
     
-    #Sub-step 2 - update prompts_with_context dictionary
+    matching_ids : list[str] = Pinecone_utils.query_pinecone_index(vector)
     
-    prompts_with_context.update( {prompt: context} )
+    #Sub-step 3 - get context from wikipedia article
+    
+    context : str = ""
+    
+    for index in matching_ids:
+        
+        context += paragraph_chunks[int(index)]
+    
+    #Sub-step 4 - reduce size of context if it's too big
+    
+    context = Dataset_utils.token_chopper(context = context)
+    
+    #Sub-step 5 - update prompt with context
+    
+    prompts_with_context.update({prompt : context})
 
 #Step 5: Send prompt with context to Llama
 
-responses_file = open(file = os.getenv("LLAMA_RESPONSES_GPT_3-5_RELATIONSHIPS_PATH"), mode = 'a', encoding = 'UTF-8')
+responses_file = open(file = os.getenv("TEST_3_TEXT_RESPONSES"), mode = 'a', encoding = 'UTF-8')
 
 for prompt, context in prompts_with_context.items():
     
