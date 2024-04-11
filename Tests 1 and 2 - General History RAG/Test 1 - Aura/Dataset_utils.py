@@ -25,7 +25,8 @@ def get_data_from_file(articles_path: str) -> list[str]:
     
 def token_chopper(context : str):
     
-    while(num_tokens_from_string(context) >= 2300):
+    while(num_tokens_from_string(context) >= 2000): #~2000 cl100k_base tokens seems to be the max Llama can take as 
+                                                    #context
         
         # Split the paragraph into lines
         

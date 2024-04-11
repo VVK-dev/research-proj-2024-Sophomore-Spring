@@ -1,18 +1,18 @@
 import os
 from dotenv import load_dotenv, find_dotenv
 import Llama2_utils
-import Neo4j_utils
+import Neo4j_utils_LOCAL
 from langchain_community.graphs import Neo4jGraph
 from Dataset_utils import token_chopper
 import time
 
-#Initailize global variables
+#Initailize environment variables
 _ = load_dotenv(find_dotenv(filename = "Keys.env"))
 
 #Load Keys
 
-Neo4j_URI = os.getenv("NEO4J_URI")
-Username, Password = os.getenv("NEO4J_USERNAME"), os.getenv("NEO4J_PASSWORD")
+Neo4j_URI = os.getenv("NEO4J_URI_LOCAL")
+Username, Password = os.getenv("NEO4J_USERNAME_LOCAL"), os.getenv("NEO4J_PASSWORD_LOCAL")
 OpenAIKey = os.getenv("OPENAI_API_KEY")
 
 #Load Graph
@@ -21,11 +21,11 @@ knowledge_graph = Neo4jGraph(url = Neo4j_URI, username = Username, password = Pa
 
 #Step 1: Create vector index if it doesn't already exist
 
-Neo4j_utils.create_neo4j_vector_index(knowledge_graph)
+Neo4j_utils_LOCAL.create_neo4j_vector_index(knowledge_graph)
 
 #Step 2: Populate vector index if empty
 
-Neo4j_utils.populate_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey)
+Neo4j_utils_LOCAL.populate_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey)
 
 #Step 3: Get prompts
 
@@ -66,7 +66,7 @@ prompts_with_context : dict[str,str] = {
 
 for prompt in prompts_with_context.keys():
     
-    context = Neo4j_utils.search_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey, prompt = prompt)
+    context = Neo4j_utils_LOCAL.search_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey, prompt = prompt)
     
     #Sub-step 1 - reduce size of context if it's too big
     
