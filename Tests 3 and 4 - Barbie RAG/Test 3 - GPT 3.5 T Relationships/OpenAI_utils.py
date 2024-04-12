@@ -35,9 +35,12 @@ def get_nodes_and_relationships_from_chunk(prompt, model="gpt-3.5-turbo", temper
     Given a paragraph about the movie, you will state all the possible nodes, a label for each node and all relationships possible between each node.
     Each node can only have 1 label.
     Each label must be at least 1 word and at most 5 words.
-    You can only give one relationship per line in your responses.
-    You can give up to 300 relationships total per response.
-    Each relationship must be at least one word and at most 5 words. 
+    You can only give one relationship per line in your responses. 
+    Each relationship must be at least one word and at most 10 words.
+    
+    Try to give as many relationships as you can in your response. 
+    You must capture every single possible bit of information from the paragraph in the nodes and relationships you give.
+     
     Do not repeat relationships that are the same or similar.
     You must use underscores in place of spaces in your responses.
     Do not use any special characters other than underscores in your responses.
