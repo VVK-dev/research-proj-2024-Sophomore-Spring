@@ -70,9 +70,9 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
         chatgpt_prompt : str = f"""
         Help me create a knowledge graph about the Barbie movie.
         
-        Below is a piece from an article about the Barbie movie, delimited by ||. Using the piece, please tell me all the possible nodes and relationships that can be created in a knowledge graph about the movie.
+        Below is a paragraph from an article about the Barbie movie, delimited by ||. Using the paragraph, please tell me all the possible nodes and relationships that can be created in a knowledge graph about the movie.
         
-        Piece:
+        Paragraph:
         
         ||{chunk}||
         
@@ -88,15 +88,24 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
             time.sleep(60)
             chatgpt_prompt_counter = 0
             
-        graph_entities = OpenAI_utils.get_nodes_and_relationships_from_chunk(prompt = chatgpt_prompt)
+        cgpt_graph_entities = OpenAI_utils.get_nodes_and_relationships_from_chunk(prompt = chatgpt_prompt)
         
-        for relation in graph_entities.splitlines():
+        for relation in cgpt_graph_entities.splitlines():
             
             relation_pieces = relation.split('->')
             
             FirstNode = extract_name_and_label_from_string(relation_pieces[0])
             SecondNode = extract_name_and_label_from_string(relation_pieces[2])
             #relation_pieces[1] will be the relationship between the 2 nodes, no need to format it
+            
+            #reformat all pieces of the relationship so that it works in a cypher query
+            
+            FirstNode[0] = format_cgpt_response_for_cypher(FirstNode[0])
+            FirstNode[1] = format_cgpt_response_for_cypher(FirstNode[1])
+            SecondNode[0] = format_cgpt_response_for_cypher(SecondNode[0])
+            SecondNode[1] = format_cgpt_response_for_cypher(SecondNode[1])
+            
+            relation_pieces[1] = format_cgpt_response_for_cypher(relation_pieces[1])
             
             #cypher query to create relationship between 2 nodes; if either node doesnt exist it will create them
             cypher_query2 = f"MERGE (nodeA:{FirstNode[1]}:Entity" + " {name: $name1})\n"
