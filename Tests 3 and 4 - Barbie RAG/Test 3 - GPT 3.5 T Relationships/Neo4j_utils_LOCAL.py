@@ -5,16 +5,23 @@ import time
 
 #---HELPER METHODS TO UTILITY METHODS---#
 
+#In case chatgpt still used any special characters by mistake
+def format_cgpt_response_for_cypher(relationship_piece : str) -> str:
+    
+    relationship_piece = relationship_piece.strip().replace(' ','_').replace("'","").replace(".","_").replace("-","_").replace('__','_')
+
+    return relationship_piece
+
+
 #Given a node formatted as NodeName(Label), extract the name and label of the node
 def extract_name_and_label_from_string(text : str) -> tuple[str, str]:
     
-    name_label : tuple[str, str] = []
-    
     text_pieces = text.split('(')
     
-    name_label[0] = text_pieces[0] #name
+    text_pieces[0] = format_cgpt_response_for_cypher(text_pieces[0])
+    text_pieces[1] = format_cgpt_response_for_cypher(text_pieces[1])
     
-    name_label[1] = text_pieces[1].strip(')') #label
+    name_label : tuple[str, str] = [text_pieces[0] , text_pieces[1].strip(')')] #name, label
 
     return name_label
 
@@ -27,8 +34,11 @@ def format_result(result: List[Dict[str, Any]]) -> str:
     
     for relation in result:
         
-        nodeA_label = relation['nodeA_labels'].remove('Entity')[0] #label of first node
-        nodeB_label = relation['nodeB_labels'].remove('Entity')[0] #label of second node
+        nodeA_labels : list = relation['nodeA_labels']
+        nodeA_label = nodeA_labels[1] #label of first nodes
+        
+        nodeB_labels : list = relation['nodeB_labels']
+        nodeB_label = nodeB_labels[1] #label of second node
         
         result_as_formatted_string += f"{relation['relationship'][0]['name']}({nodeA_label})->{relation['relationship'][1]}->{relation['relationship'][2]['name']}({nodeB_label}).\n"
     
