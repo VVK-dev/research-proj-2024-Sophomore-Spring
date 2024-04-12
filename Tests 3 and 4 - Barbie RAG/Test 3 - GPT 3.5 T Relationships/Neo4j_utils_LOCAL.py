@@ -35,9 +35,17 @@ def format_result(result: List[Dict[str, Any]]) -> str:
     for relation in result:
         
         nodeA_labels : list = relation['nodeA_labels']
-        nodeA_label = nodeA_labels[1] #label of first nodes
+        nodeA_label = nodeA_labels[1] #label of first node
         
         nodeB_labels : list = relation['nodeB_labels']
+        
+        #SPECIAL CASE---
+        
+        if(relation['relationship'][2]['name'] == "Fashion_Dolls"):
+            nodeB_labels.append("Toy")
+        
+        #---
+        
         nodeB_label = nodeB_labels[1] #label of second node
         
         result_as_formatted_string += f"{relation['relationship'][0]['name']}({nodeA_label})->{relation['relationship'][1]}->{relation['relationship'][2]['name']}({nodeB_label}).\n"
@@ -91,6 +99,13 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
         cgpt_graph_entities = OpenAI_utils.get_nodes_and_relationships_from_chunk(prompt = chatgpt_prompt)
         
         for relation in cgpt_graph_entities.splitlines():
+                    
+            #Special cases---
+            
+            if("NONE" in relation.strip()):
+                continue #if cgpt cannot form any relationships, move to next chunk
+            
+            #---
             
             relation_pieces = relation.split('->')
             
@@ -101,6 +116,9 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
             if(relation_pieces[1] == "caused_Barbie's_existential_crisis(Action)  "):
                 relation_pieces[1] = "caused_existential_crisis_for"
                 relation_pieces.append("Stereotypical_Barbie(Character)")
+            
+            if(relation_pieces[1] == "14th_highest_grossing_film_of_all_time"):
+                relation_pieces[1] = "Fourteenth_highest_grossing_film_of_all_time"
             
             #---
             
@@ -113,6 +131,16 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
             FirstNode[1] = format_cgpt_response_for_cypher(FirstNode[1])
             SecondNode[0] = format_cgpt_response_for_cypher(SecondNode[0])
             SecondNode[1] = format_cgpt_response_for_cypher(SecondNode[1])
+            
+            #Special cases---
+            
+            if(SecondNode[1] == "Character)_in_2019"):
+
+                relation_pieces[1] = "cast_in_2019_as"
+                SecondNode[1] = "Character"
+            
+            
+            #---
             
             relation_pieces[1] = format_cgpt_response_for_cypher(relation_pieces[1])
             
