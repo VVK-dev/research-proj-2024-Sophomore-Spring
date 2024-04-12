@@ -3,7 +3,7 @@ from OpenAI_utils import num_tokens_from_string
 #get wiki article as paragraphs
 def get_paragraphs_from_file(article_path: str) -> list[str]:
 
-    with open(article_path, "r") as file:
+    with open(article_path, "r", encoding = 'UTF-8') as file:
         
         return file.read().split("\n\n")
 
