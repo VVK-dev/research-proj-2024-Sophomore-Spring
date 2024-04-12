@@ -1,4 +1,4 @@
-from OpenAI_utils import num_tokens_from_string
+import OpenAI_utils
 
 #get wiki article as paragraphs
 def get_paragraphs_from_file(article_path: str) -> list[str]:
@@ -10,7 +10,7 @@ def get_paragraphs_from_file(article_path: str) -> list[str]:
 
 def token_chopper(context : str):
     
-    while(num_tokens_from_string(context) >= 10000): #16384 is max token limit for gpt 3.5 turbo (prompt + completion) 
+    while(OpenAI_utils.num_tokens_from_string(context) >= 100000): #128000 is max token limit for gpt 4 turbo (prompt + completion) 
         
         # Split the paragraph into lines
         
