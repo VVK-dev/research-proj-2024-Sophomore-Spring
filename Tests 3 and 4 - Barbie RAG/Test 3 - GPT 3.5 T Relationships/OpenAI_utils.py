@@ -29,7 +29,7 @@ def get_embedding(input_str: str) -> list[float]:
     return response.data[0].embedding
 
 #Prompt ChatGPT for nodes and relationships    
-def get_nodes_and_relationships_from_chunk(prompt, model="gpt-3.5-turbo", temperature=0) -> str: #NOTE: TEST 3 WITH GPT3.5 THEN TEST 3.5 WITH GPT4 TURBO PREVIEW
+def get_nodes_and_relationships_from_chunk(prompt, model="gpt-4-turbo-preview", temperature=0) -> str: #NOTE: TEST 3 WITH GPT3.5 THEN TEST 3.5 WITH GPT4 TURBO PREVIEW
     
     system_message :str = """You are an assistant helping create a knowledge graph about a movie in neo4j.
     Given a paragraph about the movie, you will state all the possible nodes, a label for each node and all relationships possible between each node.
@@ -37,6 +37,7 @@ def get_nodes_and_relationships_from_chunk(prompt, model="gpt-3.5-turbo", temper
     Each label must be at least 1 word and at most 5 words.
     You can only give one relationship per line in your responses. 
     Each relationship must be at least one word and at most 10 words.
+    Relationships cannot start with numbers.
     
     Try to give as many relationships as you can in your response. 
     You must capture every single possible bit of information from the paragraph in the nodes and relationships you give.
@@ -45,7 +46,7 @@ def get_nodes_and_relationships_from_chunk(prompt, model="gpt-3.5-turbo", temper
     You must use underscores in place of spaces in your responses.
     Do not use any special characters other than underscores in your responses.
     
-    If you cannot form any relationships then simply state NONE.
+    If you cannot form any relationships, or if all the relationships you can form are already present in the graph, respond with NONE.
     
     Do not number your responses.
     
