@@ -2,6 +2,7 @@ import os
 import openai
 import tiktoken
 from dotenv import load_dotenv, find_dotenv
+from Dataset_utils import token_chopper
 
 #Initailize environment variables
 _ = load_dotenv(find_dotenv(filename = "Keys.env"))
@@ -65,6 +66,11 @@ def get_nodes_and_relationships_from_chunk(prompt, model="gpt-3.5-turbo", temper
     Barbie(Movie)->screenplay_written_by->Noah_Baumbach(Screenwriter)
     Greta_Gerwig(Director)->wrote_screenplay_for_Barbie_with->Noah_Baumbach(Screenwriter)
     """
+    #reduce size of prompt if too big. This will only happen when there are too many relationships in graph 
+    #given as part of the prompt. Here, token chopper will only remove excess relationships rather than
+    #parts of the article chatgpt needs to create relationships for.
+    
+    prompt = token_chopper(prompt) 
     
     messages = [
     {'role': 'system', 'content': system_message},
