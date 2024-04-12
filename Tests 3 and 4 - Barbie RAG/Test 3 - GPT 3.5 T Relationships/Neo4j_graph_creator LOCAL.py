@@ -22,4 +22,4 @@ knowledge_graph = Neo4jGraph(url = Neo4j_URI, username = Username, password = Pa
 #Populate graph
 
 
-Neo4j_utils_LOCAL.populate_neo4j_graph(get_paragraphs_from_file(article_path = BarbiePath))
+Neo4j_utils_LOCAL.populate_neo4j_graph(knowledge_graph = knowledge_graph, chunks = get_paragraphs_from_file(article_path = BarbiePath))
