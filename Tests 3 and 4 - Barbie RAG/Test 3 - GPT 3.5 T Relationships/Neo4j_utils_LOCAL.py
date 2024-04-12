@@ -95,6 +95,15 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
             relation_pieces = relation.split('->')
             
             FirstNode = extract_name_and_label_from_string(relation_pieces[0])
+            
+            #Special cases---
+            
+            if(relation_pieces[1] == "caused_Barbie's_existential_crisis(Action)  "):
+                relation_pieces[1] = "caused_existential_crisis_for"
+                relation_pieces.append("Stereotypical_Barbie(Character)")
+            
+            #---
+            
             SecondNode = extract_name_and_label_from_string(relation_pieces[2])
             #relation_pieces[1] will be the relationship between the 2 nodes, no need to format it
             
