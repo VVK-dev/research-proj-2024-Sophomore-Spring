@@ -10,8 +10,7 @@ def get_paragraphs_from_file(article_path: str) -> list[str]:
 
 def token_chopper(context : str):
     
-    while(num_tokens_from_string(context) >= 2000): #~2000 cl100k_base tokens seems to be the max Llama can take as 
-                                                    #context
+    while(num_tokens_from_string(context) >= 10000): #16384 is max token limit for gpt 3.5 turbo (prompt + completion) 
         
         # Split the paragraph into lines
         
