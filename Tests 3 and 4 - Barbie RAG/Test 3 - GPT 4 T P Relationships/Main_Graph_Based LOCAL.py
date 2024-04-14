@@ -1,10 +1,8 @@
 import os
 from dotenv import load_dotenv, find_dotenv
-import Llama2_utils
+import OpenAI_utils
 import Neo4j_utils_LOCAL
 from langchain_community.graphs import Neo4jGraph
-from Dataset_utils import token_chopper
-import time
 
 #Initailize environment variables
 _ = load_dotenv(find_dotenv(filename = "Keys.env"))
@@ -69,15 +67,11 @@ for prompt in prompts_with_context.keys():
     
     context = Neo4j_utils_LOCAL.search_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey, prompt = prompt)
     
-    #Sub-step 1 - reduce size of context if it's too big
-    
-    context = token_chopper(context = context)
-    
-    #Sub-step 2 - update prompts_with_context dictionary
+    #Sub-step 1 - update prompts_with_context dictionary
     
     prompts_with_context.update( {prompt: context} )
 
-#Step 5: Send prompt with context to Llama
+#Step 5: Send prompt with context to GPT 3.5 Turbo
 
 responses_file = open(file = os.getenv("TEST_3_GRAPH_RESPONSES"), mode = 'a', encoding = 'UTF-8')
 
@@ -85,12 +79,8 @@ for prompt, context in prompts_with_context.items():
     
     prompt_with_context : str = f"""Respond to the following prompt using the context given below it.\nPrompt: {prompt} \nContext: {context}"""
 
-    time.sleep(1.0) #wait 1s to avoid being rate limited by together.ai
-    
-    result : str = Llama2_utils.llama(prompt = prompt_with_context)
-    
-    #Possible consideration: use llama_chat() instead and keep track of conversation?
-    
+    result : str = OpenAI_utils.get_response(prompt = prompt_with_context, model = "gpt-3.5-turbo", is_question = True)
+        
     responses_file.write(f"PROMPT: \n{prompt_with_context}\n RESPONSE: \n{result}\n")
     responses_file.write("---------------------------------------------------------\n")
     
