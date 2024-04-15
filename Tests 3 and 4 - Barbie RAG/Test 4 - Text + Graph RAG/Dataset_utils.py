@@ -1,17 +1,22 @@
-from OpenAI_utils import num_tokens_from_string
+import OpenAI_utils
 
 #get wiki article as paragraphs
 def get_paragraphs_from_file(article_path: str) -> list[str]:
 
-    with open(article_path, "r") as file:
+    with open(article_path, "r", encoding = 'UTF-8') as file:
         
         return file.read().split("\n\n")
 
 
-def token_chopper(context : str):
+def token_chopper(context : str, model : str = "gpt-4-turbo-preview"):
     
-    while(num_tokens_from_string(context) >= 2000): #~2000 cl100k_base tokens seems to be the max Llama can take as 
-                                                    #context
+    limit :int = 120000 #128000 is max token limit for gpt 4 turbo (prompt + completion) 
+    
+    if(model == "gpt-3.5-turbo"):
+        
+        limit = 12000 #16000 is max token limit for gpt 3.5 turbo (prompt + completion) 
+    
+    while(OpenAI_utils.num_tokens_from_string(context) >= limit):
         
         # Split the paragraph into lines
         

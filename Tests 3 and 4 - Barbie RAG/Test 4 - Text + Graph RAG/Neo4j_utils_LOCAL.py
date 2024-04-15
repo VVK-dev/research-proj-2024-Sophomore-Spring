@@ -5,16 +5,23 @@ import time
 
 #---HELPER METHODS TO UTILITY METHODS---#
 
+#In case chatgpt still used any special characters by mistake
+def format_cgpt_response_for_cypher(relationship_piece : str) -> str:
+    
+    relationship_piece = relationship_piece.strip().replace(' ','_').replace("'","").replace(".","_").replace("-","_").replace('__','_')
+
+    return relationship_piece
+
+
 #Given a node formatted as NodeName(Label), extract the name and label of the node
 def extract_name_and_label_from_string(text : str) -> tuple[str, str]:
     
-    name_label : tuple[str, str] = []
-    
     text_pieces = text.split('(')
     
-    name_label[0] = text_pieces[0] #name
+    text_pieces[0] = format_cgpt_response_for_cypher(text_pieces[0])
+    text_pieces[1] = format_cgpt_response_for_cypher(text_pieces[1])
     
-    name_label[1] = text_pieces[1].strip(')') #label
+    name_label : tuple[str, str] = [text_pieces[0] , text_pieces[1].strip(')')] #name, label
 
     return name_label
 
@@ -27,8 +34,28 @@ def format_result(result: List[Dict[str, Any]]) -> str:
     
     for relation in result:
         
-        nodeA_label = relation['nodeA_labels'].remove('Entity')[0] #label of first node
-        nodeB_label = relation['nodeB_labels'].remove('Entity')[0] #label of second node
+        nodeA_labels : list = relation['nodeA_labels']
+        
+        if(len(nodeA_labels) > 1):
+            
+            nodeA_labels.remove("Entity") #remove the entity label when nodes have more descriptive ones
+        
+        nodeA_label : str = nodeA_labels[0] #label of first node
+        
+        nodeB_labels : list = relation['nodeB_labels']
+        
+        #SPECIAL CASE---
+        
+        if(relation['relationship'][2]['name'] == "Fashion_Dolls"):
+            nodeB_labels.append("Toy")
+        
+        #---
+        
+        if(len(nodeB_labels) > 1):
+            
+            nodeB_labels.remove("Entity") #remove the entity label when nodes have more descriptive ones
+             
+        nodeB_label :str = nodeB_labels[0] #label of second node
         
         result_as_formatted_string += f"{relation['relationship'][0]['name']}({nodeA_label})->{relation['relationship'][1]}->{relation['relationship'][2]['name']}({nodeB_label}).\n"
     
@@ -60,9 +87,9 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
         chatgpt_prompt : str = f"""
         Help me create a knowledge graph about the Barbie movie.
         
-        Below is a piece from an article about the Barbie movie, delimited by ||. Using the piece, please tell me all the possible nodes and relationships that can be created in a knowledge graph about the movie.
+        Below is a paragraph from an article about the Barbie movie, delimited by ||. Using the paragraph, please tell me all the possible nodes and relationships that can be created in a knowledge graph about the movie.
         
-        Piece:
+        Paragraph:
         
         ||{chunk}||
         
@@ -78,15 +105,53 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
             time.sleep(60)
             chatgpt_prompt_counter = 0
             
-        graph_entities = OpenAI_utils.get_nodes_and_relationships_from_chunk(prompt = chatgpt_prompt)
+        cgpt_graph_entities = OpenAI_utils.get_response(prompt = chatgpt_prompt)
         
-        for relation in graph_entities.splitlines():
+        for relation in cgpt_graph_entities.splitlines():
+                    
+            #Special cases---
+            
+            if("NONE" in relation.strip()):
+                continue #if cgpt cannot form any relationships, move to next chunk
+            
+            #---
             
             relation_pieces = relation.split('->')
             
             FirstNode = extract_name_and_label_from_string(relation_pieces[0])
+            
+            #Special cases---
+            
+            if(relation_pieces[1] == "caused_Barbie's_existential_crisis(Action)  "):
+                relation_pieces[1] = "caused_existential_crisis_for"
+                relation_pieces.append("Stereotypical_Barbie(Character)")
+            
+            if(relation_pieces[1] == "14th_highest_grossing_film_of_all_time"):
+                relation_pieces[1] = "Fourteenth_highest_grossing_film_of_all_time"
+            
+            #---
+            
             SecondNode = extract_name_and_label_from_string(relation_pieces[2])
             #relation_pieces[1] will be the relationship between the 2 nodes, no need to format it
+            
+            #reformat all pieces of the relationship so that it works in a cypher query
+            
+            FirstNode[0] = format_cgpt_response_for_cypher(FirstNode[0])
+            FirstNode[1] = format_cgpt_response_for_cypher(FirstNode[1])
+            SecondNode[0] = format_cgpt_response_for_cypher(SecondNode[0])
+            SecondNode[1] = format_cgpt_response_for_cypher(SecondNode[1])
+            
+            #Special cases---
+            
+            if(SecondNode[1] == "Character)_in_2019"):
+
+                relation_pieces[1] = "cast_in_2019_as"
+                SecondNode[1] = "Character"
+            
+            
+            #---
+            
+            relation_pieces[1] = format_cgpt_response_for_cypher(relation_pieces[1])
             
             #cypher query to create relationship between 2 nodes; if either node doesnt exist it will create them
             cypher_query2 = f"MERGE (nodeA:{FirstNode[1]}:Entity" + " {name: $name1})\n"
@@ -151,14 +216,12 @@ def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, pro
             prompt_embedding
             ) YIELD node AS contextNode
         MATCH (contextNode)-[relationship]-(neighbor)
-        RETURN contextNode, relationship, neighbor
+        RETURN contextNode AS nodeA, labels(contextNode) AS nodeA_labels, relationship, neighbor AS nodeB, labels(neighbor) AS nodeB_labels
         """, 
         params= {"openAiApiKey": OpenAIKey,
                 "prompt": prompt,
                 "embeddingModel" : "text-embedding-3-small",
-                "top_k": 1}
+                "top_k": 2}
     )
-
-
 
     return format_result(result=result)
