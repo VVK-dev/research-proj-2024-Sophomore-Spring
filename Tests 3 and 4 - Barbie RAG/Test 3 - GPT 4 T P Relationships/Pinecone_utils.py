@@ -69,8 +69,6 @@ def insert_vectors_from_data(filetext : list[str]):
         
         vector = {"id" : str(i), "values" : vector_val}
         
-        #TODO: Add a short time gap between each request to reduce chances of hitting rate limit
-        
         index.upsert(
         
             vectors = [vector]
@@ -84,8 +82,8 @@ def query_pinecone_index(input_vector: list[float]) -> list[str]:
     matches : list[dict] = pinecone_client.Index(index_name).query(
         
         vector = input_vector,
-        top_k = 1,        
-    ).get("matches") #This will return a list of dictionaries containing the IDs and similarity score of the top 3 
+        top_k = 2,        
+    ).get("matches") #This will return a list of dictionaries containing the IDs and similarity score of the top k 
     #matches
     
     #now get list of ids
