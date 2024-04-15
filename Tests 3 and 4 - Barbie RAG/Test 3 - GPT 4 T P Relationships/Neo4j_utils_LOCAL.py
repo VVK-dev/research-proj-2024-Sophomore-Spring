@@ -35,7 +35,12 @@ def format_result(result: List[Dict[str, Any]]) -> str:
     for relation in result:
         
         nodeA_labels : list = relation['nodeA_labels']
-        nodeA_label = nodeA_labels[1] #label of first node
+        
+        if(len(nodeA_labels) > 1):
+            
+            nodeA_labels.remove("Entity") #remove the entity label when nodes have more descriptive ones
+        
+        nodeA_label : str = nodeA_labels[0] #label of first node
         
         nodeB_labels : list = relation['nodeB_labels']
         
@@ -46,7 +51,11 @@ def format_result(result: List[Dict[str, Any]]) -> str:
         
         #---
         
-        nodeB_label = nodeB_labels[1] #label of second node
+        if(len(nodeB_labels) > 1):
+            
+            nodeB_labels.remove("Entity") #remove the entity label when nodes have more descriptive ones
+             
+        nodeB_label :str = nodeB_labels[0] #label of second node
         
         result_as_formatted_string += f"{relation['relationship'][0]['name']}({nodeA_label})->{relation['relationship'][1]}->{relation['relationship'][2]['name']}({nodeB_label}).\n"
     
@@ -96,7 +105,7 @@ def populate_neo4j_graph(chunks : list[str], knowledge_graph : Neo4jGraph):
             time.sleep(60)
             chatgpt_prompt_counter = 0
             
-        cgpt_graph_entities = OpenAI_utils.get_nodes_and_relationships_from_chunk(prompt = chatgpt_prompt)
+        cgpt_graph_entities = OpenAI_utils.get_response(prompt = chatgpt_prompt)
         
         for relation in cgpt_graph_entities.splitlines():
                     
@@ -207,14 +216,12 @@ def search_neo4j_vector_index(knowledge_graph : Neo4jGraph, OpenAIKey : str, pro
             prompt_embedding
             ) YIELD node AS contextNode
         MATCH (contextNode)-[relationship]-(neighbor)
-        RETURN contextNode, relationship, neighbor
+        RETURN contextNode AS nodeA, labels(contextNode) AS nodeA_labels, relationship, neighbor AS nodeB, labels(neighbor) AS nodeB_labels
         """, 
         params= {"openAiApiKey": OpenAIKey,
                 "prompt": prompt,
                 "embeddingModel" : "text-embedding-3-small",
-                "top_k": 1}
+                "top_k": 2}
     )
-
-
 
     return format_result(result=result)
