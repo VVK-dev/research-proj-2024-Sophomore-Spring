@@ -1,19 +1,36 @@
 import os
 from dotenv import load_dotenv, find_dotenv
 import OpenAI_utils
+import Neo4j_utils_LOCAL
+from langchain_community.graphs import Neo4jGraph
 import Pinecone_utils
 import Dataset_utils
 
 #Initailize environment variables
 _ = load_dotenv(find_dotenv(filename = "Keys.env"))
 
-'''RAG System'''
+#Load Keys
 
-#Step 1: Get paragraphs from file, each is one chunk
+Neo4j_URI = os.getenv("NEO4J_URI_LOCAL")
+Username, Password = os.getenv("NEO4J_USERNAME_LOCAL"), os.getenv("NEO4J_PASSWORD_LOCAL")
+OpenAIKey = os.getenv("OPENAI_API_KEY")
+
+#Load Graph and get paragraphs from file
 
 paragraph_chunks : list[str] = Dataset_utils.get_paragraphs_from_file(os.getenv("BARBIE_ARTICLE_TEXT_PATH"))
 
-#Step 2: Check if index exists
+knowledge_graph = Neo4jGraph(url = Neo4j_URI, username = Username, password = Password, database = "neo4j")
+
+
+#Step 1: Create and populate vector indices if it doesn't already exist
+
+#Sub-step 1 - Set up neo4j vector index
+
+Neo4j_utils_LOCAL.create_neo4j_vector_index(knowledge_graph)
+
+Neo4j_utils_LOCAL.populate_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey)
+
+#Sub-step 2 - Set up Pinecone vector index
 
 if (not Pinecone_utils.index_exists()):
     
@@ -25,7 +42,8 @@ if (not Pinecone_utils.index_exists()):
     
     Pinecone_utils.insert_vectors_from_data(filetext = paragraph_chunks)
 
-#Step 3: Get prompts
+
+#Step 2: Get prompts
 
 #1st set of prompts - Overall descriptive questions
 
@@ -47,8 +65,8 @@ relation_prompt2 : str = "How did Mattel influence the development of the Barbie
 relation_prompt3 : str = "How does the main character of the Barbie movie change over the course of the film?"
 relation_prompt4 : str = "List all the actresses that were offered to play as Stereotypical Barbie in the Barbie movie."
 relation_prompt5 : str = "How did Sony Pictures influence the development of the Barbie movie?"
-relation_prompt6 : str = "List all the things Greta Gerwig describes as influences for the story and development of the Barbie movie."
-relation_prompt7 : str = "Which countries took action on the Barbie movie regarding the nine dash line controversy and why?"
+relation_prompt6 : str = "List all the things Greta Gerwig describes as influences for the story and development of the movie."
+relation_prompt7 : str = "Which countries took action on the movie, regarding the nine dash line controversy?"
 relation_prompt8 : str = "What did media outlets and newspapers say about the Barbie movie?"
 relation_prompt9 : str = "What other Warner Bros. films did Barbie surpass in earnings?"
 relation_prompt10 : str = "How does the character of 'Beach Ken' change over the course of the movie?"
@@ -61,7 +79,8 @@ prompts_with_context : dict[str,str] = {
     relation_prompt7 : None, relation_prompt8 : None, relation_prompt9 : None, relation_prompt10 : None    
     }
 
-#Step 4: Get context for prompt 
+
+#Step 3: Get context for prompts
 
 for prompt in prompts_with_context.keys():
     
@@ -80,21 +99,27 @@ for prompt in prompts_with_context.keys():
     for index in matching_ids:
         
         context += paragraph_chunks[int(index)]
+
+    context +="\n"
+
+    #Sub-step 4 - get context from neo4j knowledge graph
     
-    #Sub-step 4 - update prompt with context
+    context += Neo4j_utils_LOCAL.search_neo4j_vector_index(knowledge_graph = knowledge_graph, OpenAIKey = OpenAIKey, prompt = prompt)
     
-    prompts_with_context.update({prompt : context})
+    #Sub-step 1 - update prompts_with_context dictionary
+    
+    prompts_with_context.update( {prompt: context} )
 
 #Step 5: Send prompt with context to GPT 3.5 Turbo
 
-responses_file = open(file = os.getenv("TEST_3_TEXT_RESPONSES"), mode = 'a', encoding = 'UTF-8')
+responses_file = open(file = os.getenv("TEST_4_TEXT_PLUS_GRAPH_RESPONSES"), mode = 'a', encoding = 'UTF-8')
 
 for prompt, context in prompts_with_context.items():
     
     prompt_with_context : str = f"""Respond to the following prompt using the context given below it.\nPrompt: {prompt} \nContext: {context}"""
 
     result : str = OpenAI_utils.get_response(prompt = prompt_with_context, model = "gpt-3.5-turbo", is_question = True)
-    
+        
     responses_file.write(f"PROMPT: \n{prompt_with_context}\n RESPONSE: \n{result}\n")
     responses_file.write("---------------------------------------------------------\n")
     
