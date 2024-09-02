@@ -10,7 +10,7 @@ copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
 1. Attribution: Users of the Software must display and include either the full
-name of the original author, Varun Venkatadri, or the original author's pseudonym,
+name of the original author, Varun Venkatadri, and the original author's pseudonym,
 "VVK-dev", in all derived works and related documentation.
 
 2. For-profit use: If the Software is used for profit, the user must 
